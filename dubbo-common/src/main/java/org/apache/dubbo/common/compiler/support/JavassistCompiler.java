@@ -55,16 +55,19 @@ public class JavassistCompiler extends AbstractCompiler {
         // 创建 ClassPool 对象
         ClassPool pool = new ClassPool(true);
         pool.appendClassPath(new LoaderClassPath(ClassHelper.getCallerClassLoader(getClass())));
+        // 匹配import
         Matcher matcher = IMPORT_PATTERN.matcher(source);
         List<String> importPackages = new ArrayList<String>();
         Map<String, String> fullNames = new HashMap<String, String>();
         while (matcher.find()) {
             String pkg = matcher.group(1);
+            // * 引用整个包下面的接口
             if (pkg.endsWith(".*")) {
                 String pkgName = pkg.substring(0, pkg.length() - 2);
                 pool.importPackage(pkgName);
                 importPackages.add(pkgName);
             } else {
+                //引用指定类下面的接口或类
                 int pi = pkg.lastIndexOf('.');
                 if (pi > 0) {
                     String pkgName = pkg.substring(0, pi);
@@ -75,6 +78,7 @@ public class JavassistCompiler extends AbstractCompiler {
             }
         }
         String[] packages = importPackages.toArray(new String[0]);
+        //匹配继承关系
         matcher = EXTENDS_PATTERN.matcher(source);
         CtClass cls;
         if (matcher.find()) {
@@ -85,6 +89,7 @@ public class JavassistCompiler extends AbstractCompiler {
             } else if (fullNames.containsKey(extend)) {
                 extendClass = fullNames.get(extend);
             } else {
+                // 引用整个包下面的类
                 extendClass = ClassUtils.forName(packages, extend).getName();
             }
             cls = pool.makeClass(name, pool.get(extendClass));

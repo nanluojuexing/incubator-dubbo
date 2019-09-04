@@ -45,7 +45,7 @@ public interface RegistryService {
     void register(URL url);
 
     /**
-     * Unregister
+     * Unregister 取消注册
      * <p>
      * Unregistering is required to support the contract:<br>
      * 1. If it is the persistent stored data of dynamic=false, the registration data can not be found, then the IllegalStateException is thrown, otherwise it is ignored.<br>
@@ -56,6 +56,7 @@ public interface RegistryService {
     void unregister(URL url);
 
     /**
+     *  订阅符合条件的已注册数据，当有注册数据变更时 自动推送
      * Subscribe to eligible registered data and automatically push when the registered data is changed.
      * <p>
      * Subscribing need to support contracts:<br>
@@ -73,7 +74,7 @@ public interface RegistryService {
     void subscribe(URL url, NotifyListener listener);
 
     /**
-     * Unsubscribe
+     * Unsubscribe 取消订阅
      * <p>
      * Unsubscribing is required to support the contract:<br>
      * 1. If don't subscribe, ignore it directly.<br>
