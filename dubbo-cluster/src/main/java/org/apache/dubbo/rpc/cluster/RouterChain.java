@@ -22,6 +22,7 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -76,7 +77,7 @@ public class RouterChain<T> {
      * @param routers routers from 'router://' rules in 2.6.x or before.
      */
     public void addRouters(List<Router> routers) {
-        List<Router> newRouters = new CopyOnWriteArrayList<>();
+        List<Router> newRouters = new ArrayList<>();
         newRouters.addAll(builtinRouters);
         newRouters.addAll(routers);
         CollectionUtils.sort(routers);
