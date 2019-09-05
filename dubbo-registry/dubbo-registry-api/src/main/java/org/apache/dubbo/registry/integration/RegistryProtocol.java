@@ -379,7 +379,7 @@ public class RegistryProtocol implements Protocol {
                 return doRefer(getMergeableCluster(), registry, type, url);
             }
         }
-        // 追星服务调用
+        // 服务调用
         return doRefer(cluster, registry, type, url);
     }
 
@@ -403,7 +403,7 @@ public class RegistryProtocol implements Protocol {
             registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY,
                     Constants.CHECK_KEY, String.valueOf(false)));
         }
-
+        directory.buildRouterChain(subscribeUrl);
         // 订阅 providers、configurators、routers 等节点数据
         directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY,
                 Constants.PROVIDERS_CATEGORY
