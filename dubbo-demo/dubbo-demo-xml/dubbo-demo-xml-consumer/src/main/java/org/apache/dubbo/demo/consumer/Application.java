@@ -27,9 +27,18 @@ public class Application {
      */
     public static void main(String[] args) {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring/dubbo-consumer.xml");
+        // 本地调用
+//        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring/dubbo-injvm.xml");
         context.start();
         DemoService demoService = context.getBean("demoService", DemoService.class);
-        String hello = demoService.sayHello("world");
-        System.err.println("result: " + hello);
+        while(true){
+            try {
+                Thread.sleep(5000);
+                String hello = demoService.sayHello("world");
+                System.err.println("result: " + hello);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
