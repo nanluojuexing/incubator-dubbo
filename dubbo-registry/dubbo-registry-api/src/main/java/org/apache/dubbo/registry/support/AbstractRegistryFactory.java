@@ -32,6 +32,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * AbstractRegistryFactory. (SPI, Singleton, ThreadSafe)
+ *  RegistryFactory 抽象类， 实现 Registry的容器管理
  *
  * @see org.apache.dubbo.registry.RegistryFactory
  */
