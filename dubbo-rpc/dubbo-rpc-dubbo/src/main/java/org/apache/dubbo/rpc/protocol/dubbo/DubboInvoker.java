@@ -117,6 +117,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                     result = new SimpleAsyncRpcResult(futureAdapter, futureAdapter.getResultFuture(), false);
                 }
                 return result;
+                // 同步调用
             } else {
                 RpcContext.getContext().setFuture(null);
                 // 同步调用，等待结果
