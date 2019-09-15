@@ -80,6 +80,7 @@ public class DubboProtocol extends AbstractProtocol {
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object message) throws RemotingException {
             if (message instanceof Invocation) {
                 Invocation inv = (Invocation) message;
+                // 获取对应的invoker 对象
                 Invoker<?> invoker = getInvoker(channel, inv);
                 // need to consider backward-compatibility if it's a callback
                 if (Boolean.TRUE.toString().equals(inv.getAttachments().get(IS_CALLBACK_SERVICE_INVOKE))) {
@@ -110,7 +111,9 @@ public class DubboProtocol extends AbstractProtocol {
                     CompletableFuture<Object> future = new CompletableFuture<>();
                     rpcContext.setAsyncContext(new AsyncContextImpl(future));
                 }
+                // 设置调用方的地址
                 rpcContext.setRemoteAddress(channel.getRemoteAddress());
+                // 执行调用
                 Result result = invoker.invoke(inv);
 
                 if (result instanceof AsyncRpcResult) {
@@ -225,7 +228,7 @@ public class DubboProtocol extends AbstractProtocol {
         String serviceKey = serviceKey(port, path, inv.getAttachments().get(Constants.VERSION_KEY), inv.getAttachments().get(Constants.GROUP_KEY));
         // 从exportMap 查找与 serviceKey 相对应的 DubboExporter 对象
         DubboExporter<?> exporter = (DubboExporter<?>) exporterMap.get(serviceKey);
-
+        // 获得 invoker 对象
         if (exporter == null) {
             throw new RemotingException(channel, "Not found exported service: " + serviceKey + " in " + exporterMap.keySet() + ", may be version or group mismatch " + ", channel: consumer: " + channel.getRemoteAddress() + " --> provider: " + channel.getLocalAddress() + ", message:" + inv);
         }

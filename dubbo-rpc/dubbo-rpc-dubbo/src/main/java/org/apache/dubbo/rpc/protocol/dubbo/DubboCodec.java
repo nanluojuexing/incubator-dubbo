@@ -49,6 +49,9 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
 
     public static final String NAME = "dubbo";
     public static final String DUBBO_VERSION = Version.getProtocolVersion();
+    /**
+     * 响应 异常
+     */
     public static final byte RESPONSE_WITH_EXCEPTION = 0;
     public static final byte RESPONSE_VALUE = 1;
     public static final byte RESPONSE_NULL_VALUE = 2;
@@ -209,12 +212,14 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
         Throwable th = result.getException();
         if (th == null) {
             Object ret = result.getValue();
+            // 空返回
             if (ret == null) {
                 out.writeByte(attach ? RESPONSE_NULL_VALUE_WITH_ATTACHMENTS : RESPONSE_NULL_VALUE);
             } else {
                 out.writeByte(attach ? RESPONSE_VALUE_WITH_ATTACHMENTS : RESPONSE_VALUE);
                 out.writeObject(ret);
             }
+            // 异常
         } else {
             out.writeByte(attach ? RESPONSE_WITH_EXCEPTION_WITH_ATTACHMENTS : RESPONSE_WITH_EXCEPTION);
             out.writeObject(th);

@@ -31,6 +31,9 @@ import java.io.IOException;
 
 public final class DubboCountCodec implements Codec2 {
 
+    /**
+     * 编解码器
+     */
     private DubboCodec codec = new DubboCodec();
 
     @Override
@@ -40,16 +43,21 @@ public final class DubboCountCodec implements Codec2 {
 
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
+        // 记录当前位置
         int save = buffer.readerIndex();
         MultiMessage result = MultiMessage.create();
         do {
+            //解码
             Object obj = codec.decode(channel, buffer);
+            // 输入不够，重置堵进度
             if (Codec2.DecodeResult.NEED_MORE_INPUT == obj) {
                 buffer.readerIndex(save);
                 break;
+                // 解析消息
             } else {
                 result.addMessage(obj);
                 logMessageLength(obj, buffer.readerIndex() - save);
+                // 记录当前位置
                 save = buffer.readerIndex();
             }
         } while (true);

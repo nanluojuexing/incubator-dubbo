@@ -81,6 +81,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         } else {
             currentClient = clients[index.getAndIncrement() % clients.length];
         }
+        // 远程调用
         try {
             // 获取异步的配置
             boolean isAsync = RpcUtils.isAsync(getUrl(), invocation);

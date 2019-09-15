@@ -172,6 +172,7 @@ public class ExchangeCodec extends TelnetCodec {
             res.setStatus(status);
             try {
                 ObjectInput in = CodecSupport.deserialize(channel.getUrl(), is, proto);
+                // 正常响应状态
                 if (status == Response.OK) {
                     Object data;
                     if (res.isHeartbeat()) {
