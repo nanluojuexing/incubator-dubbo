@@ -142,6 +142,7 @@ public class DecodeableRpcResult extends RpcResult implements Codec, Decodeable 
     public void decode() throws Exception {
         if (!hasDecoded && channel != null && inputStream != null) {
             try {
+                // 执行反序列化操作
                 decode(channel, inputStream);
             } catch (Throwable e) {
                 if (log.isWarnEnabled()) {

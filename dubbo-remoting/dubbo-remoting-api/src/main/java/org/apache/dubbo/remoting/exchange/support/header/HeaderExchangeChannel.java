@@ -50,6 +50,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (channel == null) {
             throw new IllegalArgumentException("channel == null");
         }
+        // 这里指向的 nettyClient
         this.channel = channel;
     }
 
@@ -107,12 +108,16 @@ final class HeaderExchangeChannel implements ExchangeChannel {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send request " + request + ", cause: The channel " + this + " is closed!");
         }
         // create request.
+        // 创建请求对象
         Request req = new Request();
         req.setVersion(Version.getProtocolVersion());
+        // 设置为双向通信
         req.setTwoWay(true);
         req.setData(request);
+        // 创建 DefaultFuture
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout);
         try {
+            // 调用 NettyClient 发送 send请求方法
             channel.send(req);
         } catch (RemotingException e) {
             future.cancel();

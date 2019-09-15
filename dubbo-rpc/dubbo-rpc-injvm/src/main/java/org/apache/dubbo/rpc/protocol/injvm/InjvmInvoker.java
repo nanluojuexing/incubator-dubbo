@@ -29,11 +29,18 @@ import java.util.Map;
 
 /**
  * InjvmInvoker
+ *
+ * 本地调用
  */
 class InjvmInvoker<T> extends AbstractInvoker<T> {
 
     private final String key;
 
+    /**
+     * key : 服务键
+     *
+     * @link  org.apache.dubbo.rpc.protocol.AbstractProtocol
+     */
     private final Map<String, Exporter<?>> exporterMap;
 
     InjvmInvoker(Class<T> type, URL url, String key, Map<String, Exporter<?>> exporterMap) {
@@ -52,13 +59,17 @@ class InjvmInvoker<T> extends AbstractInvoker<T> {
         }
     }
 
+
     @Override
     public Result doInvoke(Invocation invocation) throws Throwable {
+        // 获得exporter对象
         Exporter<?> exporter = InjvmProtocol.getExporter(exporterMap, getUrl());
         if (exporter == null) {
             throw new RpcException("Service [" + key + "] not found.");
         }
+        // 设置服务提供者d地址为本地
         RpcContext.getContext().setRemoteAddress(Constants.LOCALHOST_VALUE, 0);
+        // 调用
         return exporter.getInvoker().invoke(invocation);
     }
 }

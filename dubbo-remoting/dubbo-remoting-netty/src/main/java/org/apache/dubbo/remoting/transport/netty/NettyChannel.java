@@ -56,10 +56,13 @@ final class NettyChannel extends AbstractChannel {
         if (ch == null) {
             return null;
         }
+        // 尝试从集合中获取 NettyChannel 实例
         NettyChannel ret = channelMap.get(ch);
         if (ret == null) {
+            // 如果 ret为空，创建一个新的实例
             NettyChannel nc = new NettyChannel(ch, url, handler);
             if (ch.isConnected()) {
+                //存入集合中
                 ret = channelMap.putIfAbsent(ch, nc);
             }
             if (ret == null) {
@@ -90,6 +93,28 @@ final class NettyChannel extends AbstractChannel {
         return channel.isConnected();
     }
 
+    /**
+     * 调用链
+     * proxy0#sayHello(String)
+     *   —> InvokerInvocationHandler#invoke(Object, Method, Object[])
+     *     —> MockClusterInvoker#invoke(Invocation)
+     *       —> AbstractClusterInvoker#invoke(Invocation)
+     *         —> FailoverClusterInvoker#doInvoke(Invocation, List<Invoker<T>>, LoadBalance)
+     *           —> Filter#invoke(Invoker, Invocation)  // 包含多个 Filter 调用
+     *             —> ListenerInvokerWrapper#invoke(Invocation)
+     *               —> AbstractInvoker#invoke(Invocation)
+     *                 —> DubboInvoker#doInvoke(Invocation)
+     *                   —> ReferenceCountExchangeClient#request(Object, int)
+     *                     —> HeaderExchangeClient#request(Object, int)
+     *                       —> HeaderExchangeChannel#request(Object, int)
+     *                         —> AbstractPeer#send(Object)
+     *                           —> AbstractClient#send(Object, boolean)
+     *                             —> NettyChannel#send(Object, boolean)
+     *                               —> NioClientSocketChannel#write(Object)
+     * @param message
+     * @param sent
+     * @throws RemotingException
+     */
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
         super.send(message, sent);
@@ -97,9 +122,17 @@ final class NettyChannel extends AbstractChannel {
         boolean success = true;
         int timeout = 0;
         try {
+            // 发送消息(包含请求和响应消息)
             ChannelFuture future = channel.write(message);
+            /**
+             * 在 AbstractPeer.send() 中 send(message, url.getParameter(Constants.SENT_KEY, false)) 获取url中de参数
+             * sent <dubbo:method sent="true/false"/>
+             * 1.true : 等待消息发出，消息发送失败则抛出异常
+             * 2.false : 不等待消息发出，将消息放入 IO队列，即刻返回
+             */
             if (sent) {
                 timeout = getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
+                // 等待消息发出，若在规定时间没能发出，success 会被置为true
                 success = future.await(timeout);
             }
             Throwable cause = future.getCause();
@@ -109,7 +142,7 @@ final class NettyChannel extends AbstractChannel {
         } catch (Throwable e) {
             throw new RemotingException(this, "Failed to send message " + message + " to " + getRemoteAddress() + ", cause: " + e.getMessage(), e);
         }
-
+        // 这里如果 success 为false 则抛出异常
         if (!success) {
             throw new RemotingException(this, "Failed to send message " + message + " to " + getRemoteAddress()
                     + "in timeout(" + timeout + "ms) limit");

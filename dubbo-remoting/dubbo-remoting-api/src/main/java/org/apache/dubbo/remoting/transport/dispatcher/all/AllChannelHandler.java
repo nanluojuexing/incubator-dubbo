@@ -30,22 +30,37 @@ import org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
+/**
+ *  所有消息 都派发到线程池，包括请求，响应，连接事件，断开事件
+ */
 public class AllChannelHandler extends WrappedChannelHandler {
 
     public AllChannelHandler(ChannelHandler handler, URL url) {
         super(handler, url);
     }
 
+    /**
+     * 处理连接事件
+     * @param channel
+     * @throws RemotingException
+     */
     @Override
     public void connected(Channel channel) throws RemotingException {
+        // 获取线程池
         ExecutorService cexecutor = getExecutorService();
         try {
+            // 将连接事件派发到线程池中处理
             cexecutor.execute(new ChannelEventRunnable(channel, handler, ChannelState.CONNECTED));
         } catch (Throwable t) {
             throw new ExecutionException("connect event", channel, getClass() + " error when process connected event .", t);
         }
     }
 
+    /**
+     * 处理断开事件
+     * @param channel
+     * @throws RemotingException
+     */
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         ExecutorService cexecutor = getExecutorService();
@@ -56,6 +71,21 @@ public class AllChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    /**
+     * 服务调用过程
+     * ChannelEventRunnable#run()
+     *   —> DecodeHandler#received(Channel, Object)
+     *     —> HeaderExchangeHandler#received(Channel, Object)
+     *       —> HeaderExchangeHandler#handleRequest(ExchangeChannel, Request)
+     *         —> DubboProtocol.requestHandler#reply(ExchangeChannel, Object)
+     *           —> Filter#invoke(Invoker, Invocation)
+     *             —> AbstractProxyInvoker#invoke(Invocation)
+     *               —> Wrapper0#invokeMethod(Object, String, Class[], Object[])
+     *                 —> DemoServiceImpl#sayHello(String)
+     * @param channel
+     * @param message
+     * @throws RemotingException
+     */
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         //获取线程池
@@ -68,6 +98,7 @@ public class AllChannelHandler extends WrappedChannelHandler {
             //fix The thread pool is full, refuses to call, does not return, and causes the consumer to wait for time out
         	if(message instanceof Request && t instanceof RejectedExecutionException){
         		Request request = (Request)message;
+        		// 如果通信方式为双向通信 此时将 Server side ...threadpool is exhausted
         		if(request.isTwoWay()){
         			String msg = "Server side(" + url.getIp() + "," + url.getPort() + ") threadpool is exhausted ,detail msg:" + t.getMessage();
         			Response response = new Response(request.getId(), request.getVersion());

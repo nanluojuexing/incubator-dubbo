@@ -79,6 +79,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     void handleRequest(final ExchangeChannel channel, Request req) throws RemotingException {
         Response res = new Response(req.getId(), req.getVersion());
+        // 检测请求是否合法，不合法则返回状态为 BAD_REQUEST
         if (req.isBroken()) {
             Object data = req.getData();
 
@@ -191,15 +192,18 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         final ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         try {
             if (message instanceof Request) {
-                // handle request.
+                // handle request. 处理请求对象
                 Request request = (Request) message;
                 if (request.isEvent()) {
+                    // 处理事件
                     handlerEvent(channel, request);
                 } else {
                     // twoway就是指Consumer需要拿到Provider的结果的调用
                     if (request.isTwoWay()) {
+                        // 调用服务并获取结果
                         handleRequest(exchangeChannel, request);
                     } else {
+                        // 单向通信，仅向后调用指定服务，无需获取结果
                         handler.received(exchangeChannel, request.getData());
                     }
                 }
