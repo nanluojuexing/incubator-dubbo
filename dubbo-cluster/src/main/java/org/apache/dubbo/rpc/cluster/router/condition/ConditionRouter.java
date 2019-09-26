@@ -64,6 +64,7 @@ public class ConditionRouter extends AbstractRouter implements Comparable<Router
         this.priority = url.getParameter(Constants.PRIORITY_KEY, 0);
         this.force = url.getParameter(Constants.FORCE_KEY, false);
         this.enabled = url.getParameter(Constants.ENABLED_KEY, true);
+        // 获得路由规则设置，并初始化
         init(url.getParameterAndDecoded(Constants.RULE_KEY));
     }
 
@@ -74,11 +75,15 @@ public class ConditionRouter extends AbstractRouter implements Comparable<Router
             }
             rule = rule.replace("consumer.", "").replace("provider.", "");
             int i = rule.indexOf("=>");
+            // 分别获取服务消费者和提供者匹配规则
             String whenRule = i < 0 ? null : rule.substring(0, i).trim();
             String thenRule = i < 0 ? rule.trim() : rule.substring(i + 2).trim();
+            // 解析服务提供者匹配规则
             Map<String, MatchPair> when = StringUtils.isBlank(whenRule) || "true".equals(whenRule) ? new HashMap<String, MatchPair>() : parseRule(whenRule);
+            // 解析服务提供者匹配规则
             Map<String, MatchPair> then = StringUtils.isBlank(thenRule) || "false".equals(thenRule) ? null : parseRule(thenRule);
             // NOTE: It should be determined on the business level whether the `When condition` can be empty or not.
+            // 将解析出的匹配规则分别赋值给 whenCondition 和 thenCondition 成员变量
             this.whenCondition = when;
             this.thenCondition = then;
         } catch (ParseException e) {
