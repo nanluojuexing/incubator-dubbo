@@ -113,6 +113,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         req.setVersion(Version.getProtocolVersion());
         // 设置为双向通信
         req.setTwoWay(true);
+        // 将调用该方法前的RpcInvocation类型请求参数封装到Request中
         req.setData(request);
         // 创建 DefaultFuture
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout);

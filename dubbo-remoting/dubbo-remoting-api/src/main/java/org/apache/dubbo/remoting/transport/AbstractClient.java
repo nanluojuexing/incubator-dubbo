@@ -259,6 +259,12 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         return channel.hasAttribute(key);
     }
 
+    /**
+     * Channel准备发送请求消息到远程服务的核心源码
+     * @param message
+     * @param sent    already sent to socket?
+     * @throws RemotingException
+     */
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
         if (send_reconnect && !isConnected()) {
@@ -266,7 +272,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         }
         // 获的一个channel 有具体的子类实现
         Channel channel = getChannel();
-        //TODO Can the value returned by getChannel() be null? need improvement.
+        //TODO Can the value returned by getChannel() be null? need improvement. getChannel返回的状态是否包含null需要改进
         if (channel == null || !channel.isConnected()) {
             throw new RemotingException(this, "message can not send, because channel is closed . url:" + getUrl());
         }

@@ -73,6 +73,7 @@ public class DefaultFuture implements ResponseFuture {
         this.channel = channel;
         this.request = request;
         // 获取请求的id
+        // request.getId即得到这一次请求的id，id生成方式通过AtomicLong.getAndIncrement()得到；源码参考Request.newId()；这个方法会不会溢出？getAndIncrement()增长到MAX_VALUE时，再增长会变为MIN_VALUE，负数也可以做为ID，所以不会溢出
         this.id = request.getId();
         this.timeout = timeout > 0 ? timeout : channel.getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
         // put into waiting map.
@@ -162,6 +163,11 @@ public class DefaultFuture implements ResponseFuture {
         }
     }
 
+    /**
+     * 获取请求结果
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public Object get() throws RemotingException {
         return get(timeout);
@@ -169,12 +175,14 @@ public class DefaultFuture implements ResponseFuture {
 
     @Override
     public Object get(int timeout) throws RemotingException {
+        // 如果Consumer端指定的timeout不大于0，那么设置为默认值1s
         if (timeout <= 0) {
             timeout = Constants.DEFAULT_TIMEOUT;
         }
         // 检测服务提供方是否 成功返回了调用结果
         if (!isDone()) {
             long start = System.currentTimeMillis();
+            // 通过ReentrantLock锁保证线程安全，lock定义为：private final Lock lock = new ReentrantLock();
             lock.lock();
             try {
                 // 循环检测 服务提供方是否 成功返回了调用结果
@@ -295,6 +303,7 @@ public class DefaultFuture implements ResponseFuture {
     }
 
     private Object returnFromResponse() throws RemotingException {
+        // 全局申明的private volatile Response response就是结果，后面会分析response是怎么被赋值的；
         Response res = response;
         if (res == null) {
             throw new IllegalStateException("response cannot be null");

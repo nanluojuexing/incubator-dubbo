@@ -202,6 +202,8 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
     /**
      * Reselect, use invokers not in `selected` first, if all invokers are in `selected`,
      * just pick an available one using loadbalance policy.
+     * 1. 查找可用的invoker
+     * 2. reselectInvokers 不为空，则通过负载均衡组建再次进行选择
      *
      * @param loadbalance
      * @param invocation
@@ -229,10 +231,13 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         }
 
         if (!reselectInvokers.isEmpty()) {
+            // 通过负载均衡组建来选择
             return loadbalance.select(reselectInvokers, getUrl(), invocation);
         }
 
         // Just pick an available invoker using loadbalance policy
+        // 若线程走到此处，说明 reselectInvokers 集合为空，此时不会调用负载均衡组件进行筛选。
+        // 这里从 selected 列表中查找可用的 Invoker，并将其添加到 reselectInvokers 集合中
         if (selected != null) {
             for (Invoker<T> invoker : selected) {
                 if ((invoker.isAvailable()) // available first
@@ -242,6 +247,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
             }
         }
         if (!reselectInvokers.isEmpty()) {
+            // 再次进行选择，并返回选择结果
             return loadbalance.select(reselectInvokers, getUrl(), invocation);
         }
 
@@ -257,10 +263,13 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         if (contextAttachments != null && contextAttachments.size() != 0) {
             ((RpcInvocation) invocation).addAttachments(contextAttachments);
         }
-
+        // 从Diectory中得到所有可用的，经过路由过滤的Invoker集合
         List<Invoker<T>> invokers = list(invocation);
+        // 根据 invokers选择负载策略
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
+        // 如果异步调用，那么在attachment中给id赋值（值是自增的，通过AtomicLong.getAndIncrement()得到）
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+        // doInvoke()定义在AbstractClusterInvoker中是一个抽象方法，所以这里采用了模板方法设计模式，调用FailoverClusterInvoker（默认是failover集群容错）中的doInvoke()方法
         return doInvoke(invocation, invokers, loadbalance);
     }
 
@@ -310,9 +319,11 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      */
     protected LoadBalance initLoadBalance(List<Invoker<T>> invokers, Invocation invocation) {
         if (CollectionUtils.isNotEmpty(invokers)) {
+            // 如果有可用的Invoker，那么根据第一个Invoker得到其LoadBalance策略
             return ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(invokers.get(0).getUrl()
                     .getMethodParameter(RpcUtils.getMethodName(invocation), Constants.LOADBALANCE_KEY, Constants.DEFAULT_LOADBALANCE));
         } else {
+            // // 如果没有可用的Invoker，那么采用默认的LoadBalance策略（随机策略）
             return ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(Constants.DEFAULT_LOADBALANCE);
         }
     }

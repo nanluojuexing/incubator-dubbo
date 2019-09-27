@@ -37,6 +37,14 @@ public class InvokerInvocationHandler implements InvocationHandler {
         this.invoker = handler;
     }
 
+    /**
+     *
+     * @param proxy 代理对象
+     * @param method 方法名称
+     * @param args 调用的参数
+     * @return
+     * @throws Throwable
+     */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
@@ -56,6 +64,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
             return invoker.equals(args[0]);
         }
         // 将 method 和 args 封装到 RpcInvocation 中，并执行后续的调用
+        // 常规的dubbo调用，都走这里，把调用的方法名称和参数封装成RpcInvocation对象，然后调用MockClusterInvoker中的invoke()方法
         return invoker.invoke(createInvocation(method, args)).recreate();
     }
 

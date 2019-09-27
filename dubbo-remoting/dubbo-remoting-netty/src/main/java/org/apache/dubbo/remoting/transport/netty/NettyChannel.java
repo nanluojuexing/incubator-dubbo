@@ -123,6 +123,7 @@ final class NettyChannel extends AbstractChannel {
         int timeout = 0;
         try {
             // 发送消息(包含请求和响应消息)
+            // 这里就是调用netty的NioClientSocketChannel.write(Object message)方法将请求message发送到Provider
             ChannelFuture future = channel.write(message);
             /**
              * 在 AbstractPeer.send() 中 send(message, url.getParameter(Constants.SENT_KEY, false)) 获取url中de参数

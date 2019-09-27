@@ -66,6 +66,12 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         this.invokers = invokers;
     }
 
+    /**
+     * 执行调用
+     * @param invocation
+     * @return
+     * @throws Throwable
+     */
     @Override
     protected Result doInvoke(final Invocation invocation) throws Throwable {
         RpcInvocation inv = (RpcInvocation) invocation;
@@ -75,6 +81,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         inv.setAttachment(Constants.VERSION_KEY, version);
 
         ExchangeClient currentClient;
+        // 如果只有一个Client，直接选择；如果多个Client，轮询
         if (clients.length == 1) {
             // 从client 数组中获取 ExchangeClient
             currentClient = clients[0];
@@ -83,11 +90,12 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         }
         // 远程调用
         try {
-            // 获取异步的配置
+            // 获取异步的配置，默认为false
             boolean isAsync = RpcUtils.isAsync(getUrl(), invocation);
             boolean isAsyncFuture = RpcUtils.isReturnTypeFuture(inv);
             // isOneway 为 true ，表示单向通信
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
+            // 获取consumer的 timeout,默认1s
             int timeout = getUrl().getMethodParameter(methodName, Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
             // 异步无返回值
             if (isOneway) {
@@ -120,7 +128,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 // 同步调用
             } else {
                 RpcContext.getContext().setFuture(null);
-                // 同步调用，等待结果
+                // 同步调用，等待结果 ResponseFuture 具体的结果在DefaultFuture
                 return (Result) currentClient.request(inv, timeout).get();
             }
         } catch (TimeoutException e) {
