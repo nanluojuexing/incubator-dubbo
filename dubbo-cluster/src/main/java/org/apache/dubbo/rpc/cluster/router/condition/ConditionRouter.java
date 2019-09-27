@@ -61,6 +61,7 @@ public class ConditionRouter extends AbstractRouter implements Comparable<Router
 
     public ConditionRouter(URL url) {
         this.url = url;
+        // 获取 priority force配置
         this.priority = url.getParameter(Constants.PRIORITY_KEY, 0);
         this.force = url.getParameter(Constants.FORCE_KEY, false);
         this.enabled = url.getParameter(Constants.ENABLED_KEY, true);
@@ -91,8 +92,15 @@ public class ConditionRouter extends AbstractRouter implements Comparable<Router
         }
     }
 
+    /**
+     *
+     * @param rule
+     * @return
+     * @throws ParseException
+     */
     private static Map<String, MatchPair> parseRule(String rule)
             throws ParseException {
+        // 定义条件映射集合
         Map<String, MatchPair> condition = new HashMap<String, MatchPair>();
         if (StringUtils.isBlank(rule)) {
             return condition;
@@ -101,6 +109,18 @@ public class ConditionRouter extends AbstractRouter implements Comparable<Router
         MatchPair pair = null;
         // Multiple values
         Set<String> values = null;
+        // 通过正则表达式匹配路由规则，ROUTE_PATTERN = ([&!=,]*)\s*([^&!=,\s]+)
+        // 这个表达式看起来不是很好理解，第一个括号内的表达式用于匹配"&", "!", "=" 和 "," 等符号。
+        // 第二括号内的用于匹配英文字母，数字等字符。举个例子说明一下：
+        //    host = 2.2.2.2 & host != 1.1.1.1 & method = hello
+        // 匹配结果如下：
+        //     括号一      括号二
+        // 1.  null       host
+        // 2.   =         2.2.2.2
+        // 3.   &         host
+        // 4.   !=        1.1.1.1
+        // 5.   &         method
+        // 6.   =         hello
         final Matcher matcher = ROUTE_PATTERN.matcher(rule);
         while (matcher.find()) { // Try to match one by one
             String separator = matcher.group(1);
@@ -172,19 +192,30 @@ public class ConditionRouter extends AbstractRouter implements Comparable<Router
             return invokers;
         }
         try {
+            // 先对服务消费者条件进行匹配，如果匹配失败，表明服务消费者 url 不符合匹配规则，
+            // 无需进行后续匹配，直接返回 Invoker 列表即可。比如下面的规则：
+            //     host = 10.20.153.10 => host = 10.0.0.10
+            // 这条路由规则希望 IP 为 10.20.153.10 的服务消费者调用 IP 为 10.0.0.10 机器上的服务。
+            // 当消费者 ip 为 10.20.153.11 时，matchWhen 返回 false，表明当前这条路由规则不适用于
+            // 当前的服务消费者，此时无需再进行后续匹配，直接返回即可。
             if (!matchWhen(url, invocation)) {
                 return invokers;
             }
             List<Invoker<T>> result = new ArrayList<Invoker<T>>();
+            // 服务提供者匹配条件未配置，表明对指定的服务消费者禁用服务，也就是服务消费者在黑名单中
             if (thenCondition == null) {
                 logger.warn("The current consumer in the service blacklist. consumer: " + NetUtils.getLocalHost() + ", service: " + url.getServiceKey());
                 return result;
             }
+            // 这里可以简单的把 Invoker 理解为服务提供者，现在使用服务提供者匹配规则对 Invoker 列表进行匹配
             for (Invoker<T> invoker : invokers) {
+                // 若匹配成功，则表示当前 Invoker 符合服务提供者匹配规则，添加到result 列表中
                 if (matchThen(invoker.getUrl(), url)) {
                     result.add(invoker);
                 }
             }
+            // 返回匹配结果，如果 result 为空列表，且 force = true，表示强制返回空列表，
+            // 否则路由结果为空的路由规则将自动失效
             if (!result.isEmpty()) {
                 return result;
             } else if (force) {
@@ -210,29 +241,47 @@ public class ConditionRouter extends AbstractRouter implements Comparable<Router
     }
 
     boolean matchWhen(URL url, Invocation invocation) {
+        // 服务消费者条件为 null 或空，均返回 true，比如：
+        //     => host != 172.22.3.91
+        // 表示所有的服务消费者都不得调用 IP 为 172.22.3.91 的机器上的服务
         return whenCondition == null || whenCondition.isEmpty() || matchCondition(whenCondition, url, null, invocation);
     }
 
     private boolean matchThen(URL url, URL param) {
+        // 服务提供者条件为 null 或空，表示禁用服务
         return !(thenCondition == null || thenCondition.isEmpty()) && matchCondition(thenCondition, url, param, null);
     }
 
+    /**
+     *
+     * @param condition 服务消费者匹配的条件
+     * @param url url 源自 route 方法的参数列表，该参数由外部类调用 route 方法时传入
+     * @param param
+     * @param invocation
+     * @return
+     */
     private boolean matchCondition(Map<String, MatchPair> condition, URL url, URL param, Invocation invocation) {
         Map<String, String> sample = url.toMap();
         boolean result = false;
+        // 遍历 condition 列表
         for (Map.Entry<String, MatchPair> matchPair : condition.entrySet()) {
+            // 获取匹配项名称，比如 host、method 等
             String key = matchPair.getKey();
             String sampleValue;
+            // 如果 invocation 不为空，且 key 为 mehtod(s)，表示进行方法匹配
             //get real invoked method name from invocation
             if (invocation != null && (Constants.METHOD_KEY.equals(key) || Constants.METHODS_KEY.equals(key))) {
+                // 获得被调用的方法名称
                 sampleValue = invocation.getMethodName();
             } else if (Constants.ADDRESS_KEY.equals(key)) {
                 sampleValue = url.getAddress();
             } else if (Constants.HOST_KEY.equals(key)) {
                 sampleValue = url.getHost();
             } else {
+                // 从服务提供者或消费者 url 中获取指定字段值，比如 host、application 等
                 sampleValue = sample.get(key);
                 if (sampleValue == null) {
+                    // 尝试通过 default.xxx 获取相应的值
                     sampleValue = sample.get(Constants.DEFAULT_KEY_PREFIX + key);
                 }
             }
@@ -244,6 +293,11 @@ public class ConditionRouter extends AbstractRouter implements Comparable<Router
                 }
             } else {
                 //not pass the condition
+                // sampleValue 为空，表明服务提供者或消费者 url 中不包含相关字段。此时如果
+                // MatchPair 的 matches 不为空，表示匹配失败，返回 false。比如我们有这样
+                // 一条匹配条件 loadbalance = random，假设 url 中并不包含 loadbalance 参数，
+                // 此时 sampleValue = null。既然路由规则里限制了 loadbalance 必须为 random，
+                // 但 sampleValue = null，明显不符合规则，因此返回 false
                 if (!matchPair.getValue().matches.isEmpty()) {
                     return false;
                 } else {
@@ -254,8 +308,17 @@ public class ConditionRouter extends AbstractRouter implements Comparable<Router
         return result;
     }
 
+    /**
+     *
+     */
     protected static final class MatchPair {
+        /**
+         * 存放匹配条件
+         */
         final Set<String> matches = new HashSet<String>();
+        /**
+         * 存放不匹配条件
+         */
         final Set<String> mismatches = new HashSet<String>();
 
         private boolean isMatch(String value, URL param) {

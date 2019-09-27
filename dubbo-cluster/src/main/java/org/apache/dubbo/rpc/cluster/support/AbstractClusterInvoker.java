@@ -117,30 +117,51 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         if (CollectionUtils.isEmpty(invokers)) {
             return null;
         }
+        // 获取方法名
         String methodName = invocation == null ? StringUtils.EMPTY : invocation.getMethodName();
-
+        // 获取 sticky 配置，sticky 表示粘滞连接。所谓粘滞连接是指让服务消费者尽可能的
+        // 调用同一个服务提供者，除非该提供者挂了再进行切换
         boolean sticky = invokers.get(0).getUrl()
             .getMethodParameter(methodName, Constants.CLUSTER_STICKY_KEY, Constants.DEFAULT_CLUSTER_STICKY);
-
         //ignore overloaded method
+        // 检测 invokers 列表是否包含 stickyInvoker，如果不包含，
+        // 说明 stickyInvoker 代表的服务提供者挂了，此时需要将其置空
         if (stickyInvoker != null && !invokers.contains(stickyInvoker)) {
             stickyInvoker = null;
         }
         //ignore concurrency problem
+        // 在 sticky 为 true，且 stickyInvoker != null 的情况下。如果 selected 包含
+        // stickyInvoker，表明 stickyInvoker 对应的服务提供者可能因网络原因未能成功提供服务。
+        // 但是该提供者并没挂，此时 invokers 列表中仍存在该服务提供者对应的 Invoker。
         if (sticky && stickyInvoker != null && (selected == null || !selected.contains(stickyInvoker))) {
+            // availablecheck 表示是否开启了可用性检查，如果开启了，则调用 stickyInvoker 的
+            // isAvailable 方法进行检查，如果检查通过，则直接返回 stickyInvoker。
             if (availablecheck && stickyInvoker.isAvailable()) {
                 return stickyInvoker;
             }
         }
-
+        // 如果线程走到当前代码处，说明前面的 stickyInvoker 为空，或者不可用。
+        // 此时继续调用 doSelect 选择 Invoker
         Invoker<T> invoker = doSelect(loadbalance, invocation, invokers, selected);
-
+        // 如果 sticky 为 true，则将负载均衡组件选出的 Invoker 赋值给 stickyInvoker
         if (sticky) {
             stickyInvoker = invoker;
         }
         return invoker;
     }
 
+    /**
+     * 1，负载均衡组件选择 Invoker
+     * 2，选出来的 Invoker 不稳定，或不可用，此时需要调用 reselect 方法进行重选
+     *
+     * reselect 选出来的 Invoker 为空，此时定位 invoker 在 invokers 列表中的位置 index，然后获取 index + 1 处的 invoker，这也可以看做是重选逻辑的一部分
+     * @param loadbalance
+     * @param invocation
+     * @param invokers
+     * @param selected
+     * @return
+     * @throws RpcException
+     */
     private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,
         List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
 
@@ -150,9 +171,11 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
+        // 通过负载均衡组件选择 Invoker
         Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
 
         //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
+        // 如果 selected 包含负载均衡选择出的 Invoker，或者该 Invoker 无法经过可用性检查，此时进行重选
         if ((selected != null && selected.contains(invoker))
                 || (!invoker.isAvailable() && getUrl() != null && availablecheck)) {
             try {

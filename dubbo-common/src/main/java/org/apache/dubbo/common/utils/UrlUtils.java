@@ -401,6 +401,7 @@ public class UrlUtils {
 
     public static boolean isMatchGlobPattern(String pattern, String value, URL param) {
         if (param != null && pattern.startsWith("$")) {
+            // 引用服务消费者参数，param 参数为服务消费者 url
             pattern = param.getRawParameter(pattern.substring(1));
         }
         return isMatchGlobPattern(pattern, value);
