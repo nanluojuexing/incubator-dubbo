@@ -148,8 +148,11 @@ public class DefaultFuture implements ResponseFuture {
     public static void received(Channel channel, Response response) {
         try {
             // 根据编号获取指定的 DefaultFuture 对象
+            // 在response中封装了请求ID，根据请求ID得到DefaultFuture（根据请求id通过remove方式获取DefaultFuture的好处是，
+            // 获取的同时也清理了FUTURES中这个ID对应的请求信息，防止FUTURES堆积）
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
+                // 接收Reponse结果，这就是请求id对应的结果
                 future.doReceived(response);
             } else {
                 logger.warn("The timeout response finally returned at "
@@ -350,6 +353,7 @@ public class DefaultFuture implements ResponseFuture {
     private void doReceived(Response res) {
         lock.lock();
         try {
+            // 将reponse赋值给申明的:private volatile Response response;这就是请求id对应的结果
             response = res;
             if (done != null) {
                 done.signal();
