@@ -73,15 +73,17 @@ public class AllChannelHandler extends WrappedChannelHandler {
 
     /**
      * 服务调用过程
-     * ChannelEventRunnable#run()
-     *   —> DecodeHandler#received(Channel, Object)
-     *     —> HeaderExchangeHandler#received(Channel, Object)
-     *       —> HeaderExchangeHandler#handleRequest(ExchangeChannel, Request)
-     *         —> DubboProtocol.requestHandler#reply(ExchangeChannel, Object)
-     *           —> Filter#invoke(Invoker, Invocation)
-     *             —> AbstractProxyInvoker#invoke(Invocation)
-     *               —> Wrapper0#invokeMethod(Object, String, Class[], Object[])
-     *                 —> DemoServiceImpl#sayHello(String)
+     * NettyHandler.messageReceived()
+     * ->AllChannelHandler.received()
+     *   ->ChannelEventRunnable#run()
+     *     —> DecodeHandler#received(Channel, Object)
+     *       —> HeaderExchangeHandler#received(Channel, Object)
+     *         —> HeaderExchangeHandler#handleRequest(ExchangeChannel, Request)
+     *           —> DubboProtocol.requestHandler#reply(ExchangeChannel, Object)
+     *             —> Filter#invoke(Invoker, Invocation)
+     *               —> AbstractProxyInvoker#invoke(Invocation)
+     *                 —> Wrapper0#invokeMethod(Object, String, Class[], Object[])
+     *                   —> DemoServiceImpl#sayHello(String)
      * @param channel
      * @param message
      * @throws RemotingException

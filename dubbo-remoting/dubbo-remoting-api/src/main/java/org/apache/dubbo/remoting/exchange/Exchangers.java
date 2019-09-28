@@ -113,6 +113,7 @@ public class Exchangers {
     }
 
     public static Exchanger getExchanger(URL url) {
+        // Constants.DEFAULT_EXCHANGER 的值为header ,所以默认exchanger实现为 HeaderExchanger
         String type = url.getParameter(Constants.EXCHANGER_KEY, Constants.DEFAULT_EXCHANGER);
         return getExchanger(type);
     }

@@ -98,9 +98,10 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             return;
         }
         // find handler by message class.
+        // 从Request 类型的req中取出请求msg，RpcInvocation类型
         Object msg = req.getData();
         try {
-            // handle data.
+            // handle data. 将返回的result （RpcResult）包装成dubbo统一返回类型的Response
             CompletableFuture<Object> future = handler.reply(channel, msg);
             if (future.isDone()) {
                 res.setStatus(Response.OK);

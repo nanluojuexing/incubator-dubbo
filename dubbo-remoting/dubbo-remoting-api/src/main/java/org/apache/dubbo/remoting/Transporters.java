@@ -78,6 +78,7 @@ public class Transporters {
     }
 
     public static Transporter getTransporter() {
+        // 根据 Transporter 注解SPI的值，默认的是 NettyTransporter
         return ExtensionLoader.getExtensionLoader(Transporter.class).getAdaptiveExtension();
     }
 

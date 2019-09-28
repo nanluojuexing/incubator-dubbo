@@ -73,7 +73,8 @@ public class DefaultFuture implements ResponseFuture {
         this.channel = channel;
         this.request = request;
         // 获取请求的id
-        // request.getId即得到这一次请求的id，id生成方式通过AtomicLong.getAndIncrement()得到；源码参考Request.newId()；这个方法会不会溢出？getAndIncrement()增长到MAX_VALUE时，再增长会变为MIN_VALUE，负数也可以做为ID，所以不会溢出
+        // request.getId即得到这一次请求的id，id生成方式通过AtomicLong.getAndIncrement()得到；源码参考Request.newId()；
+        // 这个方法会不会溢出？getAndIncrement()增长到MAX_VALUE时，再增长会变为MIN_VALUE，负数也可以做为ID，所以不会溢出
         this.id = request.getId();
         this.timeout = timeout > 0 ? timeout : channel.getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
         // put into waiting map.

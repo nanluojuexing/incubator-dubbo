@@ -69,6 +69,13 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
         failbackTasks = failbackTasksConfig;
     }
 
+    /**
+     * 定时重发
+     * @param loadbalance
+     * @param invocation
+     * @param invokers
+     * @param lastInvoker
+     */
     private void addFailed(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, Invoker<T> lastInvoker) {
         if (failTimer == null) {
             synchronized (this) {

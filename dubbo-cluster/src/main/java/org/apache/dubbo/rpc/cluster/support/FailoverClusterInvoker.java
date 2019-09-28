@@ -54,21 +54,27 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         List<Invoker<T>> copyInvokers = invokers;
+        // 检查 copyInvokers 是否为空，如果为空，那么抛出异常
         checkInvokers(copyInvokers, invocation);
         String methodName = RpcUtils.getMethodName(invocation);
-        // 获取重试次数
+        // 获取重试次数,获得最大可调用次数
         int len = getUrl().getMethodParameter(methodName, Constants.RETRIES_KEY, Constants.DEFAULT_RETRIES) + 1;
+        // 如果为负数 retries ，则至少调用一次
         if (len <= 0) {
             len = 1;
         }
         // retry loop.
+        // 保存最后的一次异常
         RpcException le = null; // last exception.
+        // 保存已经调用的invoker
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
         Set<String> providers = new HashSet<String>(len);
-        // 循环调用，失败重试
+        // 循环调用，失败重试,failover的核心机制，如果出现调用失败，那么重试其他服务器
         for (int i = 0; i < len; i++) {
             //Reselect before retry to avoid a change of candidate `invokers`.
             //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
+            // 重试时，进行重新选择，避免重试时invoker 列表已经发生变化
+            // 如果 列表发生了变化，那么invoked 判读会失败， invoker 示例已经改变
             if (i > 0) {
                 checkWhetherDestroyed();
                 // 在进行重试前重新列举 Invoker，这样做的好处是，如果某个服务挂了，
@@ -78,13 +84,15 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 // 对 copyinvokers 进行判空检查
                 checkInvokers(copyInvokers, invocation);
             }
-            // 通过负载均衡选择 Invoker
+            // 通过负载均衡 cong copyInvokers 选择 Invoker
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
+            // 保存每次调用invoker
             invoked.add(invoker);
             RpcContext.getContext().setInvokers((List) invoked);
             try {
                 // 调用目标 Invoker 的 invoke 方法 invokerWrapper.invoke()
                 Result result = invoker.invoke(invocation);
+                // 重试过程中，将最后一次调用的异常信息以warn级别打印出来
                 if (le != null && logger.isWarnEnabled()) {
                     logger.warn("Although retry the method " + methodName
                             + " in the service " + getInterface().getName()
@@ -98,16 +106,19 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 }
                 return result;
             } catch (RpcException e) {
+                // 如果是业务性异常，不再重试，直接抛出
                 if (e.isBiz()) { // biz exception.
                     throw e;
                 }
                 le = e;
             } catch (Throwable e) {
+                //其他性质的异常统一封装
                 le = new RpcException(e.getMessage(), e);
             } finally {
                 providers.add(invoker.getUrl().getAddress());
             }
         }
+        // 最大调用次数用完还未得到result ，抛出 异常，重试N次还是失败，并输出最后一次异常信息
         throw new RpcException(le.getCode(), "Failed to invoke the method "
                 + methodName + " in the service " + getInterface().getName()
                 + ". Tried " + len + " times of the providers " + providers

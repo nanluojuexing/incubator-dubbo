@@ -74,13 +74,18 @@ public class DubboProtocol extends AbstractProtocol {
     //consumer side export a stub service for dispatching event
     //servicekey-stubmethods
     private final ConcurrentMap<String, String> stubServiceMethodsMap = new ConcurrentHashMap<String, String>();
+    /**
+     *  server = Exchangers.bind(url,requestHandler)
+     *  dubbo 把请求交给requestHandler 处理
+     */
     private ExchangeHandler requestHandler = new ExchangeHandlerAdapter() {
 
         @Override
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object message) throws RemotingException {
+            // 所有dubbo请求都会被封装成 invocation 类型对象，如果请求message 不是 Invocation 类型，抛出异常 new RemotingException(channel, "Unsupported request: "
             if (message instanceof Invocation) {
                 Invocation inv = (Invocation) message;
-                // 获取对应的invoker 对象
+                // 获取对应的invoker 对象 根据调用参数 message
                 Invoker<?> invoker = getInvoker(channel, inv);
                 // need to consider backward-compatibility if it's a callback
                 if (Boolean.TRUE.toString().equals(inv.getAttachments().get(IS_CALLBACK_SERVICE_INVOKE))) {
@@ -113,7 +118,7 @@ public class DubboProtocol extends AbstractProtocol {
                 }
                 // 设置调用方的地址
                 rpcContext.setRemoteAddress(channel.getRemoteAddress());
-                // 执行调用
+                // 执行调用 调用filter链后,动态代理调用provider的方法实现，并返回结果
                 Result result = invoker.invoke(inv);
 
                 if (result instanceof AsyncRpcResult) {
@@ -425,13 +430,14 @@ public class DubboProtocol extends AbstractProtocol {
 
     /**
      * Get shared connection
+     * 获取共享链接
      */
     private ExchangeClient getSharedClient(URL url) {
         String key = url.getAddress();
         // 获取带有“引用计数”功能的 ExchangeClient
         ReferenceCountExchangeClient client = referenceClientMap.get(key);
         if (client != null) {
-            // 若未关闭，增加指向该 Client 的数量，并返回它
+            // 若client未关闭，增加指向该 Client 的数量，并返回它
             if (!client.isClosed()) {
                 // 增加计数引用
                 client.incrementAndGetCount();

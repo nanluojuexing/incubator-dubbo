@@ -26,6 +26,9 @@ import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.exchange.Response;
 
+/**
+ * 保证请求或响应对象可在线程池中被解码
+ */
 public class DecodeHandler extends AbstractChannelHandlerDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeHandler.class);
@@ -39,7 +42,7 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
         if (message instanceof Decodeable) {
             decode(message);
         }
-
+        // 如果是consumer 调用provider 那么message 就是request 类型 需要在这里解码
         if (message instanceof Request) {
             decode(((Request) message).getData());
         }

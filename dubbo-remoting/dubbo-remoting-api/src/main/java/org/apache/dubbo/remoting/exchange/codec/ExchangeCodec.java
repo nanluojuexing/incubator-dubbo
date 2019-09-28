@@ -99,6 +99,15 @@ public class ExchangeCodec extends TelnetCodec {
         return decode(channel, buffer, readable, header);
     }
 
+    /**
+     * 解码
+     * @param channel
+     * @param buffer
+     * @param readable
+     * @param header
+     * @return
+     * @throws IOException
+     */
     @Override
     protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] header) throws IOException {
         // check magic number.
@@ -117,7 +126,7 @@ public class ExchangeCodec extends TelnetCodec {
                     break;
                 }
             }
-            // 通过 telnet  发送的数据包不包含消息头，这里调用 TelentCodec.decode 方法对数据包解码
+            // 通过 telnet  发送的数据包不包含消息头，这里调用 TelnetCodec.decode 方法对数据包解码
             return super.decode(channel, buffer, readable, header);
         }
         // check length. 检查可读数据量是否少于消息头长度，若小于则立即返回 DecodeResult.NEED_MORE_INPUT
