@@ -164,10 +164,11 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      */
     private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,
         List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
-
+        // 如果没有任何服务，则返回null
         if (CollectionUtils.isEmpty(invokers)) {
             return null;
         }
+        // 如果只有一个则直接返回
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
@@ -184,9 +185,11 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
                     invoker = rinvoker;
                 } else {
                     //Check the index of current selected invoker, if it's not the last one, choose the one at index+1.
+                    // 看下一次选的位置，如果不是最后，选+1位置
                     int index = invokers.indexOf(invoker);
                     try {
                         //Avoid collision
+                        // 避免碰撞
                         invoker = invokers.get((index + 1) % invokers.size());
                     } catch (Exception e) {
                         logger.warn(e.getMessage() + " may because invokers list dynamic change, ignore.", e);
