@@ -30,33 +30,49 @@ public class RandomLoadBalance extends AbstractLoadBalance {
 
     public static final String NAME = "random";
 
+
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
-        // Number of invokers
+        // Number of invokers 获得总数
         int length = invokers.size();
         // Every invoker has the same weight?
+        // 各个Invoke权重是否都一样
         boolean sameWeight = true;
         // the weight of every invokers
+        // 获得每个invoker的权重
         int[] weights = new int[length];
         // the first invoker's weight
+        // 获取第一个invoker的权重
         int firstWeight = getWeight(invokers.get(0), invocation);
         weights[0] = firstWeight;
         // The sum of weights
+        // 然后将第一个invoker的权重赋值给 总的权重
         int totalWeight = firstWeight;
+        // 下面这个循环有两个作用，第一是计算总权重 totalWeight，
+        // 第二是检测每个服务提供者的权重是否相同
         for (int i = 1; i < length; i++) {
             int weight = getWeight(invokers.get(i), invocation);
-            // save for later use
+            // save for later use 保存每个权重
             weights[i] = weight;
-            // Sum
+            // Sum 累加权重
             totalWeight += weight;
+            // 不相同的话，置为 sameWeight = false
             if (sameWeight && weight != firstWeight) {
                 sameWeight = false;
             }
         }
+        // 获取随机数，并计算落在那个区间
         if (totalWeight > 0 && !sameWeight) {
             // If (not every invoker has the same weight & at least one invoker's weight>0), select randomly based on totalWeight.
+            // 获取区间内的一个随机数 [0,totalWeight] 区间内的数字
             int offset = ThreadLocalRandom.current().nextInt(totalWeight);
             // Return a invoker based on the random value.
+            // 循环让 offset 数减去服务提供者权重值，当 offset 小于0时，返回相应的 Invoker。
+            // 举例说明一下，我们有 servers = [A, B, C]，weights = [5, 3, 2]，offset = 7。
+            // 第一次循环，offset - 5 = 2 > 0，即 offset > 5，
+            // 表明其不会落在服务器 A 对应的区间上。
+            // 第二次循环，offset - 3 = -1 < 0，即 5 < offset < 8，
+            // 表明其会落在服务器 B 对应的区间上
             for (int i = 0; i < length; i++) {
                 offset -= weights[i];
                 if (offset < 0) {
@@ -65,6 +81,7 @@ public class RandomLoadBalance extends AbstractLoadBalance {
             }
         }
         // If all invokers have the same weight value or totalWeight=0, return evenly.
+        // 如果所有服务提供de权重值一致，则随机返回一个
         return invokers.get(ThreadLocalRandom.current().nextInt(length));
     }
 
