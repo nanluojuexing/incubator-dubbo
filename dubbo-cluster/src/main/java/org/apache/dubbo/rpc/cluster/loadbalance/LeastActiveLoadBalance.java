@@ -62,6 +62,7 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
         // 以检测是否“所有具有相同最小活跃数的 Invoker 的权重”均相等
         int firstWeight = 0;
         // Every least active invoker has the same weight value?
+        // 是否所有权重相同
         boolean sameWeight = true;
 
         // Filter out all the least active invokers
@@ -103,8 +104,7 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
                 // 累加权重
                 totalWeight += afterWarmup;
                 // If every invoker has the same weight?
-                // 检测当前 Invoker 的权重与 firstWeight 是否相等，
-                // 不相等则将 sameWeight 置为 false
+                // 检测当前 Invoker 的权重与 firstWeight 是否相等，不相等则将 sameWeight 置为 false
                 if (sameWeight && i > 0 && afterWarmup != firstWeight) {
                     sameWeight = false;
                 }
@@ -137,4 +137,26 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
         // 如果权重相同或权重为0时，随机返回一个 Invoker
         return invokers.get(leastIndexes[ThreadLocalRandom.current().nextInt(leastCount)]);
     }
+
+
+    /**
+     * 算法示例：
+     *  最小活跃数算法实现：
+     * 假定有3台dubbo provider:
+     * 10.0.0.1:20884, weight=2，active=2
+     * 10.0.0.1:20886, weight=3，active=4
+     * 10.0.0.1:20888, weight=4，active=3
+     * active=2最小，且只有一个2，所以选择10.0.0.1:20884
+     *
+     * 假定有3台dubbo provider:
+     * 10.0.0.1:20884, weight=2，active=2
+     * 10.0.0.1:20886, weight=3，active=2
+     * 10.0.0.1:20888, weight=4，active=3
+     * active=2最小，且有2个，所以从[10.0.0.1:20884,10.0.0.1:20886 ]中选择；
+     * 接下来的算法与随机算法类似：
+     * 假设offset=1（即random.nextInt(5)=1）
+     * 1-2=-1<0？是，所以选中 10.0.0.1:20884, weight=2
+     * 假设offset=4（即random.nextInt(5)=4）
+     * 4-2=2<0？否，这时候offset=2， 2-3<0？是，所以选中 10.0.0.1:20886, weight=3
+     */
 }

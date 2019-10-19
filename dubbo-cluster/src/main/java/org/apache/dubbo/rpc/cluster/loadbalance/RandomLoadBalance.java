@@ -24,7 +24,16 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * random load balance.
+ * random load balance. 随机算法（默认的）
+ *
+ * 调用链
+ * AbstractClusterInvoker.invoke(Invocation)
+ * --> AbstractClusterInvoker.doInvoke(invocation, invokers, loadbalance)
+ * --> FailoverClusterInvoker.doInvoke(Invocation, final List<Invoker<T>>, LoadBalance) （说明，dubbo默认是failover集群实现，且默认最多重试2次，即默认最多for循环调用3次）
+ * --> AbstractClusterInvoker.select()
+ * --> AbstractClusterInvoker.doSelect()
+ * --> AbstractLoadBalance.select()
+ * --> RoundRobinLoadBalance.doSelect()
  */
 public class RandomLoadBalance extends AbstractLoadBalance {
 
@@ -84,5 +93,20 @@ public class RandomLoadBalance extends AbstractLoadBalance {
         // 如果所有服务提供de权重值一致，则随机返回一个
         return invokers.get(ThreadLocalRandom.current().nextInt(length));
     }
+    /**
+     * 选择示例：
+     * 假定有3台dubbo provider:
+     * 10.0.0.1:20884, weight=2
+     * 10.0.0.1:20886, weight=3
+     * 10.0.0.1:20888, weight=4
+     * 随机算法的实现：
+     * totalWeight=9;
+     * 假设offset=1（即random.nextInt(9)=1）
+     * 1-2=-1<0？是，所以选中 10.0.0.1:20884, weight=2
+     * 假设offset=4（即random.nextInt(9)=4）
+     * 4-2=2<0？否，这时候offset=2， 2-3<0？是，所以选中 10.0.0.1:20886, weight=3
+     * 假设offset=7（即random.nextInt(9)=7）
+     * 7-2=5<0？否，这时候offset=5， 5-3=2<0？否，这时候offset=2， 2-4<0？是，所以选中 10.0.0.1:20888, weight=4
+     */
 
 }

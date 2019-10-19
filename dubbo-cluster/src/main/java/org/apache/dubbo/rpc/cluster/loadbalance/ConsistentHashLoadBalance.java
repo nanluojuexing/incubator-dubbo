@@ -32,12 +32,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * ConsistentHashLoadBalance 一致性算法
+ * ConsistentHashLoadBalance 一致性算法 相同的请求尽可能的落在同一个服务器上
+ *
+ *  尽可能保证每个服务器节点均匀的分摊流量
+ *  尽可能的保证服务器节点的上下线不影响流量的变更
  *
  */
 public class ConsistentHashLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "consistenthash";
 
+    /**
+     * 全局一致性hash 选择器
+     * key : 方法名称 如：org.apache.dubbo.demo.DemoService.sayHello()
+     * value : ConsistentHashSelector
+     */
     private final ConcurrentMap<String, ConsistentHashSelector<?>> selectors = new ConcurrentHashMap<String, ConsistentHashSelector<?>>();
 
     @SuppressWarnings("unchecked")
@@ -59,6 +67,10 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
         return selector.select(invocation);
     }
 
+    /**
+     * 一致性hash选择器
+     * @param <T>
+     */
     private static final class ConsistentHashSelector<T> {
 
         // 使用 TreeMap 存储 Invoker 虚拟节点

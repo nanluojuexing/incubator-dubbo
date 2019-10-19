@@ -200,4 +200,26 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         return invokers.get(0);
     }
 
+    /**
+     * 算法示例：
+     * 假定有3台权重都一样的dubbo provider:
+     * 10.0.0.1:20884, weight=100
+     * 10.0.0.1:20886, weight=100
+     * 10.0.0.1:20888, weight=100
+     * 轮询算法的实现：
+     * 其调用方法某个方法(key)的sequence从0开始：
+     * sequence=0时，选择invokers.get(0%3)=10.0.0.1:20884
+     * sequence=1时，选择invokers.get(1%3)=10.0.0.1:20886
+     * sequence=2时，选择invokers.get(2%3)=10.0.0.1:20888
+     * sequence=3时，选择invokers.get(3%3)=10.0.0.1:20884
+     * sequence=4时，选择invokers.get(4%3)=10.0.0.1:20886
+     * sequence=5时，选择invokers.get(5%3)=10.0.0.1:20888
+     *
+     * todo 如果有3台权重不一样的dubbo provider：
+     *  10.0.0.1:20884, weight=50
+     *  10.0.0.1:20886, weight=100
+     *  10.0.0.1:20888, weight=150
+     *  轮训算法：
+     *
+     */
 }
