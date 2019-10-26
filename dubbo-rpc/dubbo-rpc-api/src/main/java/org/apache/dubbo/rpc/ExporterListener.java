@@ -21,7 +21,8 @@ import org.apache.dubbo.common.extension.SPI;
 /**
  * ExporterListener. (SPI, Singleton, ThreadSafe)
  *
- * 服务监听器
+ * 服务监听器,服务暴漏的调用扩展点
+ * ProtocolListenerWrapper#export 方法中通过 dubbo 的 SPI 机制加载进去，然后包装成一个 ListenerExporterWrapper 对象
  */
 @SPI
 public interface ExporterListener {

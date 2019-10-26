@@ -165,7 +165,7 @@ public class ExtensionLoader<T> {
 
     private ExtensionLoader(Class<?> type) {
         this.type = type;
-        //
+        // 如果当前对象不是ExtensionFactory为当前SPI接口创建一个ExtensionFactory对象。当调用ExtensionLoader#injectExtension方法的时候进行依赖注入
         objectFactory = (type == ExtensionFactory.class ? null : ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension());
     }
 
@@ -260,7 +260,7 @@ public class ExtensionLoader<T> {
 
     /**
      * This is equivalent to {@code getActivateExtension(url, url.getParameter(key).split(","), null)}
-     *
+     * 方法主要获取当前扩展的所有可自动激活的实现标注了@Activate注解
      * @param url   url
      * @param key   url parameter key which used to get extension point names
      * @param group group
@@ -276,7 +276,7 @@ public class ExtensionLoader<T> {
 
     /**
      * Get activate extensions.
-     *
+     * 获取当前扩展的所有可自动激活的实现
      * @param url    url
      * @param values extension point names
      * @param group  group
@@ -289,8 +289,9 @@ public class ExtensionLoader<T> {
         // 处理自动激活的拓展对象们
         // 判断不存在配置 `"-name"` 。例如，<dubbo:service filter="-default" /> ，代表移除所有默认过滤器
         if (!names.contains(Constants.REMOVE_VALUE_PREFIX + Constants.DEFAULT_KEY)) {
-            // 获得拓展实现类数组
+            // 获得所有拓展实现类数组
             getExtensionClasses();
+            // 遍历当前扩展所有的@Activate扩展
             for (Map.Entry<String, Object> entry : cachedActivates.entrySet()) {
                 String name = entry.getKey();
                 Object activate = entry.getValue();
@@ -324,9 +325,10 @@ public class ExtensionLoader<T> {
             if (!name.startsWith(Constants.REMOVE_VALUE_PREFIX)
                     && !names.contains(Constants.REMOVE_VALUE_PREFIX + name)) {
                 if (Constants.DEFAULT_KEY.equals(name)) {
-                    if (!usrs.isEmpty()) {
-                        exts.addAll(0, usrs);
-                        usrs.clear();
+                    // default表示上面已经加载并且排序的exts,将排在default之前的Activate扩展放置到default组之前,例如:ext1,default,ext2
+                    if (!usrs.isEmpty()) {  // 如果此时user不为空,则user中存放的是配置在default之前的Activate扩展
+                        exts.addAll(0, usrs); // 注意index是0，放在default前面
+                        usrs.clear(); // 放到default之前，然后清空
                     }
                 } else {
                     T ext = getExtension(name);
@@ -559,6 +561,11 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 获取对应的扩展类
+     *  如果@Adaptive注解在类上就是一个装饰类；如果注解在方法上就是一个动态代理类，例如Protocol$Adaptive对象
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
         // 从缓存中获取自适应的拓展
@@ -746,6 +753,7 @@ public class ExtensionLoader<T> {
                     throw new IllegalStateException("more than 1 default extension name on extension " + type.getName()
                             + ": " + Arrays.toString(names));
                 }
+                // 设定扩展类的名称
                 if (names.length == 1) {
                     cachedDefaultName = names[0];
                 }
@@ -855,6 +863,7 @@ public class ExtensionLoader<T> {
             }
             // 检测 class 是否为 Wrapper 类型
             // 缓存拓展 Wrapper 实现类到 `cachedWrapperClasses`
+            // 判断这个SPI扩展是否以当前SPI接口为构造器,使用装饰器模式增强这个类
         } else if (isWrapperClass(clazz)) {
             Set<Class<?>> wrappers = cachedWrapperClasses;
             if (wrappers == null) {
@@ -936,7 +945,7 @@ public class ExtensionLoader<T> {
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
-            // 获取自适应拓展类，并通过反射实例化
+            // 获取自适应拓展类 getAdaptiveExtensionClass()，并通过反射实例化 newInstance()
             return injectExtension((T) getAdaptiveExtensionClass().newInstance());
         } catch (Exception e) {
             throw new IllegalStateException("Can not create adaptive extension " + type + ", cause: " + e.getMessage(), e);
@@ -948,18 +957,42 @@ public class ExtensionLoader<T> {
      * @return
      */
     private Class<?> getAdaptiveExtensionClass() {
-        // 通过 SPI 获取所有的拓展类；用于获取某个接口的所有实现类，如 可以获取 Protocol接口的 DubboProtocol、HttpProtocol等实现类
+        // @Adaptive 注解在类上;通过 SPI 获取所有的拓展类；用于获取某个接口的所有实现类，如 可以获取 Protocol接口的 DubboProtocol、HttpProtocol等实现类
         getExtensionClasses();
         // 检查缓存，若缓存不为空，则直接返回 缓存；这里判断 实现类是否为Adaptive 注解 修饰，赋值给 cachedAdaptiveClass 变量
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
-        // 创建自适应的拓展类
+        // 创建自适应的拓展类  @Adaptive注解在SPI接口方法上
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
     /**
      * 自动生成自适应拓展的代码实现，编译后返回该类
+     *
+     * 代码模版
+     * package <扩展点接口所在包>;
+     *
+     * public class <扩展点接口名>$Adpative implements <扩展点接口> {
+     *     public <有@Adaptive注解的接口方法>(<方法参数>) {
+     *         if(是否有URL类型方法参数?) 使用该URL参数
+     *         else if(是否有方法类型上有URL属性) 使用该URL属性
+     *         # <else 在加载扩展点生成自适应扩展点类时抛异常，即加载扩展点失败！>
+     *
+     *         if(获取的URL == null) {
+     *             throw new IllegalArgumentException("url == null");
+     *         }
+     *
+     *               根据@Adaptive注解上声明的Key的顺序，从URL获致Value，作为实际扩展点名。
+     *                如URL没有Value，则使用缺省扩展点实现。如没有扩展点， throw new IllegalStateException("Fail to get extension");
+     *
+     *                在扩展点实现调用该方法，并返回结果。
+     *     }
+     *
+     *     public <有@Adaptive注解的接口方法>(<方法参数>) {
+     *         throw new UnsupportedOperationException("is not adaptive method!");
+     *     }
+     * }
      * @return
      */
     private Class<?> createAdaptiveExtensionClass() {

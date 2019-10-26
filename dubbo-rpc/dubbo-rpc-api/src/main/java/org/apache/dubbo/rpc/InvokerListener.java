@@ -20,6 +20,8 @@ import org.apache.dubbo.common.extension.SPI;
 
 /**
  * InvokerListener. (SPI, Singleton, ThreadSafe)
+ *
+ * 是 dubbo 通过 Protocol 进行服务引用的时候调用的扩展点，也就是 Protocol 在进行 refer() 方法的时候对服务暴露的一个扩展点。最终是在 ProtocolListenerWrapper#export 方法中通过 dubbo 的 SPI 机制加载进去，然后包装成一个 ListenerInvokerWrapper 对象
  */
 @SPI
 public interface InvokerListener {

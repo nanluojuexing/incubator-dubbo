@@ -25,6 +25,8 @@ import java.util.List;
 
 /**
  * Directory. (SPI, Prototype, ThreadSafe)
+ *
+ * 代表多个 Invoker，可以把它看成 List<Invoker> ，但与 List 不同的是，它的值可能是动态变化的，比如注册中心推送变更
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Directory_service">Directory Service</a>
  *

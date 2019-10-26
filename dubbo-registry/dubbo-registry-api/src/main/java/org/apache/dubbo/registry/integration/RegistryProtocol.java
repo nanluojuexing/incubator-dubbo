@@ -190,9 +190,10 @@ public class RegistryProtocol implements Protocol {
 
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
         //export invoker
-        // 导出服务 本地
+        // 导出服务 本地,调用dubboProtocol 使用netty和配置的端口通过socket 暴露当前服务
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
+        /** spi获取注册中心zk,把当前暴漏的服务以url形式注册到zk上去**/
         // url to registry 获得注册中心对象
         // 根据 URL 加载 Registry 实现类，比如 ZookeeperRegistry
         final Registry registry = getRegistry(originInvoker);
@@ -212,6 +213,7 @@ public class RegistryProtocol implements Protocol {
         }
 
         // Deprecated! Subscribe to override rules in 2.6.x or before.
+        // 订阅注册中心，实现服务的自动发现和注册
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 
         exporter.setRegisterUrl(registeredProviderUrl);

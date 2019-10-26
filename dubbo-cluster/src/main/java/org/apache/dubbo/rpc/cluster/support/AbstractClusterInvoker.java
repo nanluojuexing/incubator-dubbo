@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * AbstractClusterInvoker
+ * AbstractClusterInvoker 抽象集群调用
  */
 public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
 

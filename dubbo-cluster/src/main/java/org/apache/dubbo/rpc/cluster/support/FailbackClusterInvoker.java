@@ -40,6 +40,8 @@ import java.util.concurrent.TimeUnit;
  * When fails, record failure requests and schedule for retry on a regular interval.
  * Especially useful for services of notification.
  *
+ * 失败自动恢复，后台记录失败请求，定时重发。通常用于消息通知操作
+ *
  * <a href="http://en.wikipedia.org/wiki/Failback">Failback</a>
  */
 public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
