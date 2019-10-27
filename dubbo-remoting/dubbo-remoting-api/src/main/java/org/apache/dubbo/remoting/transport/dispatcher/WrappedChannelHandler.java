@@ -51,6 +51,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
     public WrappedChannelHandler(ChannelHandler handler, URL url) {
         this.handler = handler;
         this.url = url;
+        // 选择线程处理方式
         executor = (ExecutorService) ExtensionLoader.getExtensionLoader(ThreadPool.class).getAdaptiveExtension().getExecutor(url);
 
         String componentKey = Constants.EXECUTOR_SERVICE_COMPONENT_KEY;
@@ -113,6 +114,10 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
         return url;
     }
 
+    /**
+     * 获得线程池
+     * @return
+     */
     public ExecutorService getExecutorService() {
         ExecutorService cexecutor = executor;
         // 如果构造方法中初始化的ExecutorService为空，或者线程池已经被shutdown，那么用共享连接池处理请求

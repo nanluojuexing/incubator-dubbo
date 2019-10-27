@@ -12,14 +12,14 @@ public class proxy0 implements ClassGenerator.DC, EchoService, DemoService {
     private InvocationHandler handler;
 
     @Override
-    public String sayHello(String string) {
+    public String sayHello(String string) throws Throwable {
         Object[] arrobject = new Object[]{string};
         Object object = this.handler.invoke(this, methods[0], arrobject);
         return (String)object;
     }
 
     @Override
-    public Object $echo(Object object) {
+    public Object $echo(Object object) throws Throwable {
         Object[] arrobject = new Object[]{object};
         Object object2 = this.handler.invoke(this, methods[1], arrobject);
         return object2;
