@@ -31,6 +31,7 @@ import org.apache.dubbo.rpc.RpcStatus;
  * <b>executes</b> is set to 10 and if invoke request where it is already 10 then it will throws exception. It
  * continue the same behaviour un till it is <10.
  *
+ * 服务提供者，每服务的每方法最大可并行执行请求数
  */
 @Activate(group = Constants.PROVIDER, value = Constants.EXECUTES_KEY)
 public class ExecuteLimitFilter implements Filter {

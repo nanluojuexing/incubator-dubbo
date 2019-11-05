@@ -85,14 +85,18 @@ public class JValidator implements Validator {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public JValidator(URL url) {
+        // 获得服务接口类
         this.clazz = ReflectUtils.forName(url.getServiceInterface());
+        // 获得 `"jvalidation"` 配置项
         String jvalidation = url.getParameter("jvalidation");
+        // 获得 ValidatorFactory 对象
         ValidatorFactory factory;
-        if (jvalidation != null && jvalidation.length() > 0) {
+        if (jvalidation != null && jvalidation.length() > 0) { // 指定实现
             factory = Validation.byProvider((Class) ReflectUtils.forName(jvalidation)).configure().buildValidatorFactory();
-        } else {
+        } else { // 默认
             factory = Validation.buildDefaultValidatorFactory();
         }
+        // 获得 javax Validator 对象
         this.validator = factory.getValidator();
         this.methodClassMap = new ConcurrentHashMap<String, Class>();
     }

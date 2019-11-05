@@ -50,6 +50,9 @@ import org.apache.dubbo.validation.Validator;
  * 2)Implement a SpecialValidator.java class (package name xxx.yyy.zzz) <br/>
  * 3)Add an entry <b>special</b>=<b>xxx.yyy.zzz.SpecialValidation</b> under <b>META-INF folders org.apache.dubbo.validation.Validation file</b>.
  *
+ *
+ * 用于服务消费者和提供者中，提供 参数验证 的功能
+ *
  * @see Validation
  * @see Validator
  * @see Filter
@@ -77,10 +80,12 @@ public class ValidationFilter implements Filter {
      */
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 非泛化调用和回音调用等方法
         if (validation != null && !invocation.getMethodName().startsWith("$")
                 && ConfigUtils.isNotEmpty(invoker.getUrl().getMethodParameter(invocation.getMethodName(), Constants.VALIDATION_KEY))) {
             try {
                 Validator validator = validation.getValidator(invoker.getUrl());
+                // 使用 Validator ，验证方法参数。若不合法，抛出异常
                 if (validator != null) {
                     validator.validate(invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
                 }

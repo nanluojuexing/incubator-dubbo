@@ -40,13 +40,17 @@ public class DefaultTPSLimiter implements TPSLimiter {
         long interval = url.getParameter(Constants.TPS_LIMIT_INTERVAL_KEY,
                 Constants.DEFAULT_TPS_LIMIT_INTERVAL);
         String serviceKey = url.getServiceKey();
+        // 需要限流
         if (rate > 0) {
+            // 获得 StatItem 对象
             StatItem statItem = stats.get(serviceKey);
+            // 不存在，则创建
             if (statItem == null) {
                 stats.putIfAbsent(serviceKey,
                         new StatItem(serviceKey, rate, interval));
                 statItem = stats.get(serviceKey);
             }
+            // 根据 TPS 限流规则判断是否限制此次调用.
             return statItem.isAllowable();
         } else {
             StatItem statItem = stats.get(serviceKey);

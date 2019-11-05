@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * URL statistics. (API, Cached, ThreadSafe)
+ * 状态统计
  *
  * @see org.apache.dubbo.rpc.filter.ActiveLimitFilter
  * @see org.apache.dubbo.rpc.filter.ExecuteLimitFilter
@@ -32,17 +33,52 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RpcStatus {
 
+    /**
+     * 基于服务 URL 为维度的 RpcStatus 集合
+     *
+     * key：URL
+     */
     private static final ConcurrentMap<String, RpcStatus> SERVICE_STATISTICS = new ConcurrentHashMap<String, RpcStatus>();
 
+    /**
+     * 基于服务 URL + 方法 为维度的 RpcStatus 集合
+     *
+     * key：URL
+     */
     private static final ConcurrentMap<String, ConcurrentMap<String, RpcStatus>> METHOD_STATISTICS = new ConcurrentHashMap<String, ConcurrentMap<String, RpcStatus>>();
+
     private final ConcurrentMap<String, Object> values = new ConcurrentHashMap<String, Object>();
+    /**
+     * 调用中的次数
+     */
     private final AtomicInteger active = new AtomicInteger();
+    /**
+     * 总调用次数
+     */
     private final AtomicLong total = new AtomicLong();
+    /**
+     * 总调用失败次数
+     */
     private final AtomicInteger failed = new AtomicInteger();
+    /**
+     * 总调用时长
+     */
     private final AtomicLong totalElapsed = new AtomicLong();
+    /**
+     * 总调用失败时长
+     */
     private final AtomicLong failedElapsed = new AtomicLong();
+    /**
+     * 最大调用时长
+     */
     private final AtomicLong maxElapsed = new AtomicLong();
+    /**
+     * 最大调用失败时长
+     */
     private final AtomicLong failedMaxElapsed = new AtomicLong();
+    /**
+     * 最大调用成功时长
+     */
     private final AtomicLong succeededMaxElapsed = new AtomicLong();
 
     private RpcStatus() {
@@ -77,6 +113,7 @@ public class RpcStatus {
      */
     public static RpcStatus getStatus(URL url, String methodName) {
         String uri = url.toIdentityString();
+        // 获得方法集合
         ConcurrentMap<String, RpcStatus> map = METHOD_STATISTICS.get(uri);
         if (map == null) {
             METHOD_STATISTICS.putIfAbsent(uri, new ConcurrentHashMap<String, RpcStatus>());
@@ -106,11 +143,14 @@ public class RpcStatus {
     }
 
     /**
+     * 服务调用开始的计数
      * @param url
      */
     public static boolean beginCount(URL url, String methodName, int max) {
         max = (max <= 0) ? Integer.MAX_VALUE : max;
+        // `SERVICE_STATISTICS` 的计数
         RpcStatus appStatus = getStatus(url);
+        // `METHOD_STATISTICS` 的计数
         RpcStatus methodStatus = getStatus(url, methodName);
         if (methodStatus.active.incrementAndGet() > max) {
             methodStatus.active.decrementAndGet();

@@ -36,6 +36,8 @@ import org.apache.dubbo.rpc.RpcStatus;
  *      will wait for configured timeout(default is 0 second) before invocation gets kill by dubbo.
  * </pre>
  *
+ * 每服务消费者每服务、每方法的最大可并行调用数限制的过滤器实现类
+ *
  * @see Filter
  */
 @Activate(group = Constants.CONSUMER, value = Constants.ACTIVES_KEY)
@@ -45,19 +47,25 @@ public class ActiveLimitFilter implements Filter {
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         URL url = invoker.getUrl();
         String methodName = invocation.getMethodName();
+        // 获得服务提供者每服务每方法最大可并行执行请求数
         int max = invoker.getUrl().getMethodParameter(methodName, Constants.ACTIVES_KEY, 0);
+        // 获得 RpcStatus 对象，基于服务 URL + 方法维度
         RpcStatus count = RpcStatus.getStatus(invoker.getUrl(), invocation.getMethodName());
         if (!RpcStatus.beginCount(url, methodName, max)) {
+            // 获得超时值
             long timeout = invoker.getUrl().getMethodParameter(invocation.getMethodName(), Constants.TIMEOUT_KEY, 0);
             long start = System.currentTimeMillis();
             long remain = timeout;
             synchronized (count) {
+                // 计算是否超过最大的执行请求数，等待
                 while (!RpcStatus.beginCount(url, methodName, max)) {
                     try {
+                        // 等待超时，被唤醒
                         count.wait(remain);
                     } catch (InterruptedException e) {
                         // ignore
                     }
+                    //判断是否没有剩余时长。跑出异常
                     long elapsed = System.currentTimeMillis() - start;
                     remain = timeout - elapsed;
                     if (remain <= 0) {
@@ -72,6 +80,7 @@ public class ActiveLimitFilter implements Filter {
         }
 
         boolean isSuccess = true;
+        // 调用开始计时
         long begin = System.currentTimeMillis();
         try {
             return invoker.invoke(invocation);
@@ -79,6 +88,7 @@ public class ActiveLimitFilter implements Filter {
             isSuccess = false;
             throw t;
         } finally {
+            // 调用结束的计数
             RpcStatus.endCount(url, methodName, System.currentTimeMillis() - begin, isSuccess);
             if (max > 0) {
                 synchronized (count) {
