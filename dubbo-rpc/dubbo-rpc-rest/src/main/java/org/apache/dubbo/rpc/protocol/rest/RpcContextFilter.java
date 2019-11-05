@@ -34,13 +34,21 @@ import java.util.Map;
 @Priority(Integer.MIN_VALUE + 1)
 public class RpcContextFilter implements ContainerRequestFilter, ClientRequestFilter {
 
+    // 传递 dubbo attachment的参数
     private static final String DUBBO_ATTACHMENT_HEADER = "Dubbo-Attachments";
 
     // currently we use a single header to hold the attachments so that the total attachment size limit is about 8k
+    // 限制头文件的大小
     private static final int MAX_HEADER_SIZE = 8 * 1024;
 
+    /**
+     * Server 的filter
+     * @param requestContext
+     * @throws IOException
+     */
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
+        // 设置响应的RpcContext  request
         HttpServletRequest request = ResteasyProviderFactory.getContextData(HttpServletRequest.class);
         RpcContext.getContext().setRequest(request);
 
@@ -48,7 +56,7 @@ public class RpcContextFilter implements ContainerRequestFilter, ClientRequestFi
         if (request != null && RpcContext.getContext().getRemoteAddress() == null) {
             RpcContext.getContext().setRemoteAddress(request.getRemoteAddr(), request.getRemotePort());
         }
-
+        // 设置响应的RpcContext  responese
         RpcContext.getContext().setResponse(ResteasyProviderFactory.getContextData(HttpServletResponse.class));
 
         String headers = requestContext.getHeaderString(DUBBO_ATTACHMENT_HEADER);

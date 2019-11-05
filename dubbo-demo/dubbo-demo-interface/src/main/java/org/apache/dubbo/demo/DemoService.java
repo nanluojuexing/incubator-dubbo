@@ -20,4 +20,17 @@ public interface DemoService {
 
     String sayHello(String name) throws Throwable;
 
+    void bye(Object o);
+
+    void callbackParam(String msg, ParamCallback callback);
+
+    String say01(String msg);
+
+    String[] say02();
+
+    void say03();
+
+    Void say04();
+
+
 }

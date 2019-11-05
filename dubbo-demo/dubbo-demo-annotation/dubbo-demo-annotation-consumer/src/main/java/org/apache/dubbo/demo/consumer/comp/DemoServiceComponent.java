@@ -22,6 +22,7 @@ package org.apache.dubbo.demo.consumer.comp;
 import org.apache.dubbo.config.annotation.Reference;
 import org.apache.dubbo.demo.DemoService;
 
+import org.apache.dubbo.demo.ParamCallback;
 import org.springframework.stereotype.Component;
 
 @Component("demoServiceComponent")
@@ -30,7 +31,37 @@ public class DemoServiceComponent implements DemoService {
     private DemoService demoService;
 
     @Override
-    public String sayHello(String name) {
+    public String sayHello(String name) throws Throwable {
         return demoService.sayHello(name);
+    }
+
+    @Override
+    public void bye(Object o) {
+
+    }
+
+    @Override
+    public void callbackParam(String msg, ParamCallback callback) {
+
+    }
+
+    @Override
+    public String say01(String msg) {
+        return null;
+    }
+
+    @Override
+    public String[] say02() {
+        return new String[0];
+    }
+
+    @Override
+    public void say03() {
+
+    }
+
+    @Override
+    public Void say04() {
+        return null;
     }
 }

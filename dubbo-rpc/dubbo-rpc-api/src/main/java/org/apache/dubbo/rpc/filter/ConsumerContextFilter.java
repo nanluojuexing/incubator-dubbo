@@ -31,6 +31,7 @@ import org.apache.dubbo.rpc.RpcInvocation;
  * ConsumerContextFilter set current RpcContext with invoker,invocation, local host, remote host and port
  * for consumer invoker.It does it to make the requires info available to execution thread's RpcContext.
  *
+ * 在服务消费者中使用，负责发起调用时，初始化 RpcContext
  * @see org.apache.dubbo.rpc.Filter
  * @see RpcContext
  */
@@ -39,11 +40,12 @@ public class ConsumerContextFilter implements Filter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 设置 RpcContext 对象
         RpcContext.getContext()
                 .setInvoker(invoker)
                 .setInvocation(invocation)
-                .setLocalAddress(NetUtils.getLocalHost(), 0)
-                .setRemoteAddress(invoker.getUrl().getHost(),
+                .setLocalAddress(NetUtils.getLocalHost(), 0)// 本地地址
+                .setRemoteAddress(invoker.getUrl().getHost(), //远程地址
                         invoker.getUrl().getPort());
         if (invocation instanceof RpcInvocation) {
             ((RpcInvocation) invocation).setInvoker(invoker);
@@ -51,6 +53,7 @@ public class ConsumerContextFilter implements Filter {
         try {
             // TODO should we clear server context?
             RpcContext.removeServerContext();
+            //服务调用
             return invoker.invoke(invocation);
         } finally {
             // TODO removeContext? but we need to save future for RpcContext.getFuture() API. If clear attachments here, attachments will not available when postProcessResult is invoked.

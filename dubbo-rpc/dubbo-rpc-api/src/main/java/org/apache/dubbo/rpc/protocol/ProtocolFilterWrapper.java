@@ -44,6 +44,15 @@ public class ProtocolFilterWrapper implements Protocol {
         this.protocol = protocol;
     }
 
+    /**
+     * 创建带 Filter 链的 Invoker 对象
+     *
+     * @param invoker Invoker 对象
+     * @param key 获取 URL 参数名
+     * @param group 分组
+     * @param <T> 泛型
+     * @return Invoker 对象
+     */
     private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String key, String group) {
         Invoker<T> last = invoker;
         // 获得consumer端filter的集合

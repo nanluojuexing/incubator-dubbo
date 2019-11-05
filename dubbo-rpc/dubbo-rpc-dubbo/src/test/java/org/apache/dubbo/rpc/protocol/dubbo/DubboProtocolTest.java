@@ -64,7 +64,7 @@ public class DubboProtocolTest {
     }
 
     @Test
-    public void testDubboProtocol() throws Exception {
+    public void testDubboProtocol() throws Throwable {
         DemoService service = new DemoServiceImpl();
         protocol.export(proxy.getInvoker(service, DemoService.class, URL.valueOf("dubbo://127.0.0.1:9010/" + DemoService.class.getName())));
         service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("dubbo://127.0.0.1:9010/" + DemoService.class.getName()).addParameter("timeout", 3000l)));
@@ -94,7 +94,7 @@ public class DubboProtocolTest {
     }
 
     @Test
-    public void testDubboProtocolWithMina() throws Exception {
+    public void testDubboProtocolWithMina() throws Throwable {
         DemoService service = new DemoServiceImpl();
         protocol.export(proxy.getInvoker(service, DemoService.class, URL.valueOf("dubbo://127.0.0.1:9011/" + DemoService.class.getName()).addParameter(Constants.SERVER_KEY, "mina")));
         service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("dubbo://127.0.0.1:9011/" + DemoService.class.getName()).addParameter(Constants.CLIENT_KEY, "mina").addParameter("timeout", 3000l)));
@@ -130,7 +130,7 @@ public class DubboProtocolTest {
     }
 
     @Test
-    public void testDubboProtocolMultiService() throws Exception {
+    public void testDubboProtocolMultiService() throws Throwable {
         DemoService service = new DemoServiceImpl();
         protocol.export(proxy.getInvoker(service, DemoService.class, URL.valueOf("dubbo://127.0.0.1:9010/" + DemoService.class.getName())));
         service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("dubbo://127.0.0.1:9010/" + DemoService.class.getName()).addParameter("timeout", 3000l)));

@@ -40,7 +40,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * GenericImplInvokerFilter
+ * GenericImplInvokerFilter  服务消费者的泛化调用过滤器
  */
 @Activate(group = Constants.CONSUMER, value = Constants.GENERIC_KEY, order = 20000)
 public class GenericImplFilter implements Filter {

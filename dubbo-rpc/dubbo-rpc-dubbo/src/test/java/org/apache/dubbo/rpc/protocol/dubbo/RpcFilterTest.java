@@ -39,7 +39,7 @@ public class RpcFilterTest {
     }
 
     @Test
-    public void testRpcFilter() throws Exception {
+    public void testRpcFilter() throws Throwable {
         DemoService service = new DemoServiceImpl();
         URL url = URL.valueOf("dubbo://127.0.0.1:9010/org.apache.dubbo.rpc.DemoService?service.filter=echo");
         protocol.export(proxy.getInvoker(service, DemoService.class, url));

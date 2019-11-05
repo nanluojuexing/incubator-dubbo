@@ -75,6 +75,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
     @Override
     protected Result doInvoke(final Invocation invocation) throws Throwable {
         RpcInvocation inv = (RpcInvocation) invocation;
+        // 获取方法名称
         final String methodName = RpcUtils.getMethodName(invocation);
         // 设置 path 和 version 到 attachment中
         inv.setAttachment(Constants.PATH_KEY, getUrl().getPath());
@@ -97,7 +98,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
             // 获取consumer的 timeout,默认1s
             int timeout = getUrl().getMethodParameter(methodName, Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
-            // 异步无返回值
+            // 单向调用
             if (isOneway) {
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
                 // 发送请求
@@ -119,7 +120,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 Result result;
                 if (isAsyncFuture) {
                     // register resultCallback, sometimes we need the async result being processed by the filter chain.
-                    // 注册返回结果回掉
+                    // 注册 返回结果进行回调 futureFilter
                     result = new AsyncRpcResult(futureAdapter, futureAdapter.getResultFuture(), false);
                 } else {
                     result = new SimpleAsyncRpcResult(futureAdapter, futureAdapter.getResultFuture(), false);

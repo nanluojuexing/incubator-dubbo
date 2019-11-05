@@ -34,7 +34,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * EventFilter
+ * EventFilter 事件通知过滤器
+ * @Activate(group = Constants.CONSUMER) 服务消费者才生效该过滤器
  */
 @Activate(group = Constants.CONSUMER)
 public class FutureFilter implements Filter {
@@ -43,6 +44,7 @@ public class FutureFilter implements Filter {
 
     @Override
     public Result invoke(final Invoker<?> invoker, final Invocation invocation) throws RpcException {
+        // 触发前置方法
         fireInvokeCallback(invoker, invocation);
         // need to configure if there's return value before the invocation in order to help invoker to judge if it's
         // necessary to return future.
@@ -85,6 +87,7 @@ public class FutureFilter implements Filter {
         if (asyncMethodInfo == null) {
             return;
         }
+        // 获得前置方法和对象
         final Method onInvokeMethod = asyncMethodInfo.getOninvokeMethod();
         final Object onInvokeInst = asyncMethodInfo.getOninvokeInstance();
 
@@ -97,7 +100,7 @@ public class FutureFilter implements Filter {
         if (!onInvokeMethod.isAccessible()) {
             onInvokeMethod.setAccessible(true);
         }
-
+        // 调用前置方法
         Object[] params = invocation.getArguments();
         try {
             onInvokeMethod.invoke(onInvokeInst, params);

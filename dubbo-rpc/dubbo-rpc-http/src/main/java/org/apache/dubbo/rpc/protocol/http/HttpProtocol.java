@@ -54,8 +54,15 @@ public class HttpProtocol extends AbstractProxyProtocol {
 
     private final Map<String, HttpServer> serverMap = new ConcurrentHashMap<String, HttpServer>();
 
+    /**
+     * spring HttpInvokerServiceExporter 集合。请求处理过程为 HttpServer => DispatcherServlet => InternalHandler => HttpInvokerServiceExporter
+     */
     private final Map<String, HttpInvokerServiceExporter> skeletonMap = new ConcurrentHashMap<String, HttpInvokerServiceExporter>();
 
+    /**
+     * HttpBinder$Adaptive 对象，通过 #setHttpBinder(httpBinder) 方法，Dubbo SPI 调用设置。
+     * rpcExceptions = RemoteAccessException.class
+     */
     private HttpBinder httpBinder;
 
     public HttpProtocol() {
