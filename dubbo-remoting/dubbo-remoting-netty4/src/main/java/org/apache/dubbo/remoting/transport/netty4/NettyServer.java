@@ -62,6 +62,7 @@ public class NettyServer extends AbstractServer implements Server {
     private EventLoopGroup workerGroup;
 
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
+        /* 设置线程名到 URL 上 */
         super(url, ChannelHandlers.wrap(handler, ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME)));
     }
 
@@ -75,9 +76,11 @@ public class NettyServer extends AbstractServer implements Server {
 
         final NettyServerHandler nettyServerHandler = new NettyServerHandler(getUrl(), this);
         channels = nettyServerHandler.getChannels();
-
+        //设置线程组
         bootstrap.group(bossGroup, workerGroup)
+                //设置channel类型
                 .channel(NioServerSocketChannel.class)
+                // 设置可选项
                 .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
                 .childOption(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
@@ -86,9 +89,9 @@ public class NettyServer extends AbstractServer implements Server {
                     protected void initChannel(NioSocketChannel ch) throws Exception {
                         NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyServer.this);
                         ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
-                                .addLast("decoder", adapter.getDecoder())
-                                .addLast("encoder", adapter.getEncoder())
-                                .addLast("handler", nettyServerHandler);
+                                .addLast("decoder", adapter.getDecoder())//解码
+                                .addLast("encoder", adapter.getEncoder())//编码
+                                .addLast("handler", nettyServerHandler);//处理器
                     }
                 });
         // bind

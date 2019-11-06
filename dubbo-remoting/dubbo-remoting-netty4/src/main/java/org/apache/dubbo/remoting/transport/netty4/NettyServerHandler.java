@@ -31,10 +31,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * NettyServerHandler
+ *
+ * Sharable 注解主要是用来标示一个 ChannelHandler 可以被安全地共享，即可以在多个Channel 的 ChannelPipeline 中使用同一个ChannelHandler ，而不必每一个ChannelPipeline 都重新 new 一个新的 ChannelHandler
  */
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyServerHandler extends ChannelDuplexHandler {
 
+    /**
+     *  Dubbo Channel 集合
+     */
     private final Map<String, Channel> channels = new ConcurrentHashMap<String, Channel>(); // <ip:port, channel>
 
     private final URL url;
@@ -63,6 +68,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
             if (channel != null) {
                 channels.put(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);
             }
+            // 处理连接事件
             handler.connected(channel);
         } finally {
             NettyChannel.removeChannelIfDisconnected(ctx.channel());

@@ -39,6 +39,9 @@ final class NettyChannel extends AbstractChannel {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyChannel.class);
 
+    /**
+     * 通道集合 实际 Netty Handler 里（例如下面我们会看到的 NettyServerHandler 和 NettyClientHandler），每个方法参数里，传递的是 io.netty.channel.Channel 对象。通过 NettyChannel.channelMap 中，获得对应的 NettyChannel 对象
+     */
     private static final ConcurrentMap<Channel, NettyChannel> channelMap = new ConcurrentHashMap<Channel, NettyChannel>();
 
     private final Channel channel;
@@ -91,14 +94,23 @@ final class NettyChannel extends AbstractChannel {
         return !isClosed() && channel.isActive();
     }
 
+    /**
+     * 发送消息
+     * @param message
+     * @param sent
+     * @throws RemotingException
+     */
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        //检查连接状态
         super.send(message, sent);
-
+        // 如果没有等待发送成功，默认成功
         boolean success = true;
         int timeout = 0;
         try {
+            // 发送消息
             ChannelFuture future = channel.writeAndFlush(message);
+            // 等待发送成功
             if (sent) {
                 timeout = getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
                 success = future.await(timeout);
@@ -110,7 +122,7 @@ final class NettyChannel extends AbstractChannel {
         } catch (Throwable e) {
             throw new RemotingException(this, "Failed to send message " + message + " to " + getRemoteAddress() + ", cause: " + e.getMessage(), e);
         }
-
+        // 失败抛出异常
         if (!success) {
             throw new RemotingException(this, "Failed to send message " + message + " to " + getRemoteAddress()
                     + "in timeout(" + timeout + "ms) limit");

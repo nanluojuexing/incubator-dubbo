@@ -25,20 +25,38 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class Request {
 
+    /**
+     * 事件 - 心跳
+     */
     public static final String HEARTBEAT_EVENT = null;
 
+    /**
+     * 事件 - 只读
+     */
     public static final String READONLY_EVENT = "R";
 
+    /**
+     * 请求编号自增序列
+     */
     private static final AtomicLong INVOKE_ID = new AtomicLong(0);
 
     private final long mId;
 
     private String mVersion;
 
+    /**
+     * 是否需要响应
+     */
     private boolean mTwoWay = true;
 
+    /**
+     * 是否是事件
+     */
     private boolean mEvent = false;
 
+    /**
+     * 是否是异常请求
+     */
     private boolean mBroken = false;
 
     private Object mData;

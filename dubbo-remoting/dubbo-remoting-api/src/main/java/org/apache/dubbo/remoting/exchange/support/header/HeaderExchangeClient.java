@@ -38,9 +38,15 @@ import java.util.concurrent.TimeUnit;
 public class HeaderExchangeClient implements ExchangeClient {
 
     private final Client client;
+    /**
+     * 信息交换通道
+     */
     private final ExchangeChannel channel;
     // heartbeat(ms), default value is 0 , won't execute a heartbeat.
     private int heartbeat;
+    /**
+     * 心跳间隔
+     */
     private int heartbeatTimeout;
 
     private HashedWheelTimer heartbeatTimer;
@@ -61,6 +67,9 @@ public class HeaderExchangeClient implements ExchangeClient {
             throw new IllegalStateException("heartbeatTimeout < heartbeatInterval * 2");
         }
 
+        /**
+         * 定时心跳
+         */
         if (needHeartbeat) {
             long tickDuration = calculateLeastDuration(heartbeat);
             heartbeatTimer = new HashedWheelTimer(new NamedThreadFactory("dubbo-client-heartbeat", true), tickDuration,

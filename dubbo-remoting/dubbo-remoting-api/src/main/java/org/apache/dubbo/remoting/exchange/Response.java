@@ -80,6 +80,9 @@ public class Response {
      */
     public static final byte SERVER_THREADPOOL_EXHAUSTED_ERROR = 100;
 
+    /**
+     * 响应编号
+     */
     private long mId = 0;
 
     private String mVersion;

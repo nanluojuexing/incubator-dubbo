@@ -35,6 +35,8 @@ import java.net.InetSocketAddress;
 
 /**
  * ExchangeReceiver
+ *
+ * 消息头部( Header )的信息交换通道实现类
  */
 final class HeaderExchangeChannel implements ExchangeChannel {
 
@@ -42,8 +44,14 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     private static final String CHANNEL_KEY = HeaderExchangeChannel.class.getName() + ".CHANNEL";
 
+    /**
+     * 通道，这里传入的是装饰器channel
+     */
     private final Channel channel;
 
+    /**
+     * 是否关闭
+     */
     private volatile boolean closed = false;
 
     HeaderExchangeChannel(Channel channel) {
@@ -54,6 +62,11 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         this.channel = channel;
     }
 
+    /**
+     * 创建HeaderExchangeChannel 对象
+     * @param ch
+     * @return
+     */
     static HeaderExchangeChannel getOrAddChannel(Channel ch) {
         if (ch == null) {
             return null;

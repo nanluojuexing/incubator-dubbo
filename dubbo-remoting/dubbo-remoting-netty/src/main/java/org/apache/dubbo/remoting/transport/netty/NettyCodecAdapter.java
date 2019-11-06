@@ -37,6 +37,8 @@ import java.io.IOException;
 
 /**
  * NettyCodecAdapter.
+ *
+ * Netty 编解码适配器，将 Dubbo 编解码器 适配成 Netty4 的编码器和解码器
  */
 final class NettyCodecAdapter {
 
@@ -73,10 +75,13 @@ final class NettyCodecAdapter {
 
         @Override
         protected Object encode(ChannelHandlerContext ctx, Channel ch, Object msg) throws Exception {
+            // 创建 NettyBackedChannelBuffer 对象
             org.apache.dubbo.remoting.buffer.ChannelBuffer buffer =
                     org.apache.dubbo.remoting.buffer.ChannelBuffers.dynamicBuffer(1024);
+            // 获得NettyChannel 对象
             NettyChannel channel = NettyChannel.getOrAddChannel(ch, url, handler);
             try {
+                // 编码
                 codec.encode(channel, buffer, msg);
             } finally {
                 NettyChannel.removeChannelIfDisconnected(ch);
@@ -120,7 +125,7 @@ final class NettyCodecAdapter {
                 message = org.apache.dubbo.remoting.buffer.ChannelBuffers.wrappedBuffer(
                         input.toByteBuffer());
             }
-
+            // 获得 NettyChannel
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.getChannel(), url, handler);
             Object msg;
             int saveReaderIndex;
@@ -128,6 +133,7 @@ final class NettyCodecAdapter {
             try {
                 // decode object.
                 do {
+                    // 记录当前的进度
                     saveReaderIndex = message.readerIndex();
                     try {
                         msg = codec.decode(channel, message);
@@ -135,6 +141,7 @@ final class NettyCodecAdapter {
                         buffer = org.apache.dubbo.remoting.buffer.ChannelBuffers.EMPTY_BUFFER;
                         throw e;
                     }
+                    // 需要更多输入，即消息不完整，标记回原有读进度，并结束
                     if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
                         message.readerIndex(saveReaderIndex);
                         break;

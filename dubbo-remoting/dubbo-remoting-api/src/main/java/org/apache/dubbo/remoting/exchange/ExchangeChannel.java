@@ -21,6 +21,8 @@ import org.apache.dubbo.remoting.RemotingException;
 
 /**
  * ExchangeChannel. (API/SPI, Prototype, ThreadSafe)
+ *
+ * 消息交换通道 原型模式
  */
 public interface ExchangeChannel extends Channel {
 
@@ -45,6 +47,7 @@ public interface ExchangeChannel extends Channel {
 
     /**
      * get message handler.
+     *  获取消息交换器
      *
      * @return message handler
      */
@@ -52,6 +55,7 @@ public interface ExchangeChannel extends Channel {
 
     /**
      * graceful close.
+     * 优雅的关闭
      *
      * @param timeout
      */

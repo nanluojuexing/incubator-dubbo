@@ -44,7 +44,7 @@ import java.io.InputStream;
 /**
  * ExchangeCodec.
  *
- *
+ * 信息交换编解码器
  *
  */
 public class ExchangeCodec extends TelnetCodec {
@@ -95,7 +95,7 @@ public class ExchangeCodec extends TelnetCodec {
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
         // 读取消息头数据
         buffer.readBytes(header);
-        // 调用重栽方法
+        // 调用重载的方法
         return decode(channel, buffer, readable, header);
     }
 

@@ -42,14 +42,20 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * DefaultFuture.
+ * DefaultFuture. 所有 DefaultFuture 的管理容器
  */
 public class DefaultFuture implements ResponseFuture {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultFuture.class);
 
+    /**
+     * 通道集合
+     */
     private static final Map<Long, Channel> CHANNELS = new ConcurrentHashMap<>();
 
+    /**
+     * future集合
+     */
     private static final Map<Long, DefaultFuture> FUTURES = new ConcurrentHashMap<>();
 
     public static final Timer TIME_OUT_TIMER = new HashedWheelTimer(
@@ -58,6 +64,9 @@ public class DefaultFuture implements ResponseFuture {
             TimeUnit.MILLISECONDS);
 
     // invoke id.
+    /**
+     * 请求编号
+     */
     private final long id;
     private final Channel channel;
     private final Request request;
@@ -112,6 +121,11 @@ public class DefaultFuture implements ResponseFuture {
         return FUTURES.get(id);
     }
 
+    /**
+     * 判断是否游结束的请求
+     * @param channel
+     * @return
+     */
     public static boolean hasFuture(Channel channel) {
         return CHANNELS.containsValue(channel);
     }

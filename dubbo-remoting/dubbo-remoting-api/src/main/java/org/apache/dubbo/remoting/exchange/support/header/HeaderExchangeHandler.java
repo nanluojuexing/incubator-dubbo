@@ -97,7 +97,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             channel.send(res);
             return;
         }
-        // find handler by message class.
+        // find handler by message class. ExcehangeHandler
         // 从Request 类型的req中取出请求msg，RpcInvocation类型
         Object msg = req.getData();
         try {
@@ -198,6 +198,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());
         final ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         try {
+            // 处理请求
             if (message instanceof Request) {
                 // handle request. 处理请求对象
                 Request request = (Request) message;
@@ -231,12 +232,20 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                 handler.received(exchangeChannel, message);
             }
         } finally {
+            // 移除 ExchangeChannel 对象，若已断开
             HeaderExchangeChannel.removeChannelIfDisconnected(channel);
         }
     }
 
+    /**
+     * 发生异常
+     * @param channel   channel.
+     * @param exception exception.
+     * @throws RemotingException
+     */
     @Override
     public void caught(Channel channel, Throwable exception) throws RemotingException {
+        // 当发生 ExecutionException 异常，返回异常响应( Response )
         if (exception instanceof ExecutionException) {
             ExecutionException e = (ExecutionException) exception;
             Object msg = e.getRequest();
@@ -253,8 +262,10 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         }
         ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         try {
+            // 提交给装饰的 `handler`，继续处理
             handler.caught(exchangeChannel, exception);
         } finally {
+            // 移除 ExchangeChannel 对象，若已断开
             HeaderExchangeChannel.removeChannelIfDisconnected(channel);
         }
     }

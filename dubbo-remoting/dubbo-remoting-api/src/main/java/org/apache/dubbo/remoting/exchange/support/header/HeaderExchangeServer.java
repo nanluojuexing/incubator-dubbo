@@ -108,6 +108,7 @@ public class HeaderExchangeServer implements ExchangeServer {
             if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, true)) {
                 sendChannelReadOnlyEvent();
             }
+            // 等待请求完成
             while (HeaderExchangeServer.this.isRunning()
                     && System.currentTimeMillis() - start < max) {
                 try {
@@ -117,7 +118,9 @@ public class HeaderExchangeServer implements ExchangeServer {
                 }
             }
         }
+        // 关闭心跳
         doClose();
+        // 关闭服务器
         server.close(timeout);
     }
 
@@ -126,6 +129,9 @@ public class HeaderExchangeServer implements ExchangeServer {
         server.startClose();
     }
 
+    /**
+     * 广播客户端，READONLY_EVENT 事件
+     */
     private void sendChannelReadOnlyEvent() {
         Request request = new Request();
         request.setEvent(Request.READONLY_EVENT);
