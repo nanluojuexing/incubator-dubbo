@@ -41,14 +41,30 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
 
     protected static final String SERVER_THREAD_POOL_NAME = "DubboServerHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractServer.class);
+    /**
+     * 线程池
+     */
     ExecutorService executor;
+    /**
+     * 服务地址
+     */
     private InetSocketAddress localAddress;
+    /**
+     * 绑定地址
+     */
     private InetSocketAddress bindAddress;
+    /**
+     * 最大可连接数
+     */
     private int accepts;
+    /**
+     * 空闲超出时间
+     */
     private int idleTimeout;
 
     public AbstractServer(URL url, ChannelHandler handler) throws RemotingException {
         super(url, handler);
+        // 服务地址
         localAddress = getUrl().toInetSocketAddress();
         // 绑定ip和port
         String bindIp = getUrl().getParameter(Constants.BIND_IP_KEY, getUrl().getHost());
@@ -134,6 +150,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        //获得所有的客户资源，群发消息
         Collection<Channel> channels = getChannels();
         for (Channel channel : channels) {
             if (channel.isConnected()) {
@@ -193,6 +210,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
         }
 
         Collection<Channel> channels = getChannels();
+        // 超过上限，关闭连接
         if (accepts > 0 && channels.size() > accepts) {
             logger.error("Close channel " + ch + ", cause: The server " + ch.getLocalAddress() + " connections greater than max config " + accepts);
             ch.close();

@@ -35,6 +35,7 @@ import java.util.List;
 
 /**
  * TelnetCodec
+ * 负责编解码 Telnet 命令与结果
  */
 public class TelnetCodec extends TransportCodec {
 

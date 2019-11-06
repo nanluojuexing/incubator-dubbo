@@ -24,6 +24,7 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerDispatcher;
 
 /**
  * Transporter facade. (API, Static, ThreadSafe)
+ * facade 外观模式
  */
 public class Transporters {
 
@@ -81,5 +82,4 @@ public class Transporters {
         // 根据 Transporter 注解SPI的值，默认的是 NettyTransporter
         return ExtensionLoader.getExtensionLoader(Transporter.class).getAdaptiveExtension();
     }
-
 }

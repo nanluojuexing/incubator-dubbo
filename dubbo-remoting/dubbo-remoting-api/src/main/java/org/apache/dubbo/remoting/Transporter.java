@@ -26,7 +26,7 @@ import org.apache.dubbo.common.extension.SPI;
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Transport_Layer">Transport Layer</a>
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
- *
+ * 网络传输接口
  * @see org.apache.dubbo.remoting.Transporters
  */
 @SPI("netty")
@@ -34,6 +34,8 @@ public interface Transporter {
 
     /**
      * Bind a server.
+     *
+     * 绑定服务
      *
      * @param url     server url
      * @param handler

@@ -23,7 +23,7 @@ import org.apache.dubbo.remoting.exchange.support.MultiMessage;
 
 /**
  *
- * @see MultiMessage
+ * @see MultiMessage 多消息处理器
  */
 public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
 

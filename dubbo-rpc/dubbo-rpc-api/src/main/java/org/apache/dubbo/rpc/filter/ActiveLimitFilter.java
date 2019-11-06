@@ -68,6 +68,7 @@ public class ActiveLimitFilter implements Filter {
                     //判断是否没有剩余时长。跑出异常
                     long elapsed = System.currentTimeMillis() - start;
                     remain = timeout - elapsed;
+                    // 为负值的时候跑出异常
                     if (remain <= 0) {
                         throw new RpcException("Waiting concurrent invoke timeout in client-side for service:  "
                                 + invoker.getInterface().getName() + ", method: "
