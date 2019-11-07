@@ -30,8 +30,14 @@ import java.io.OutputStream;
  */
 public class FstFactory {
 
+    /**
+     * 单例
+     */
     private static final FstFactory factory = new FstFactory();
 
+    /**
+     * 配置对象
+     */
     private final FSTConfiguration conf = FSTConfiguration.createDefaultConfiguration();
 
 

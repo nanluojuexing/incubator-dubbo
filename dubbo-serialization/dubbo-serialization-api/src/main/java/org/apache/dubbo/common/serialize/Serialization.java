@@ -38,6 +38,7 @@ public interface Serialization {
     /**
      * Get content type unique id, recommended that custom implementations use values greater than 20.
      *
+     * 获得内容类型编号
      * @return content type id
      */
     byte getContentTypeId();
@@ -45,12 +46,15 @@ public interface Serialization {
     /**
      * Get content type
      *
+     * 获得内容类型名
      * @return content type
      */
     String getContentType();
 
     /**
      * Get a serialization implementation instance
+     *
+     * 创建 ObjectOutput 对象，序列化输出列 OutputStream
      *
      * @param url URL address for the remote service
      * @param output the underlying output stream
@@ -62,6 +66,8 @@ public interface Serialization {
 
     /**
      * Get a deserialization implementation instance
+     *
+     * 创建 ObjectInput 对象，从 InputStream 反序列化
      *
      * @param url URL address for the remote service
      * @param input the underlying input stream
