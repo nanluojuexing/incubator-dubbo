@@ -44,15 +44,18 @@ public class ExecutorUtil {
     }
 
     /**
+     * 优雅关闭，禁止新的任务提交，将原有任务执行完
      * Use the shutdown pattern from:
      *  https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html
      * @param executor the Executor to shutdown
      * @param timeout the timeout in milliseconds before termination
      */
     public static void gracefulShutdown(Executor executor, int timeout) {
+        // 忽略，若不是 ExecutorService ，或者已经关闭
         if (!(executor instanceof ExecutorService) || isTerminated(executor)) {
             return;
         }
+        // 关闭，禁止新的任务提交，将原有任务执行完
         final ExecutorService es = (ExecutorService) executor;
         try {
             // Disable new tasks from being submitted
@@ -62,24 +65,33 @@ public class ExecutorUtil {
         } catch (NullPointerException ex2) {
             return;
         }
+        // 等待原有任务执行完。若等待超时，强制结束所有任务
         try {
             // Wait a while for existing tasks to terminate
             if (!es.awaitTermination(timeout, TimeUnit.MILLISECONDS)) {
                 es.shutdownNow();
             }
         } catch (InterruptedException ex) {
+            // 发生 InterruptedException 异常，也强制结束所有任务
             es.shutdownNow();
             Thread.currentThread().interrupt();
         }
+        // 若未关闭成功，新开线程去关闭
         if (!isTerminated(es)) {
             newThreadToCloseExecutor(es);
         }
     }
 
+    /**
+     * 强制关闭，包括打断原有执行中的任务
+     * @param executor
+     * @param timeout
+     */
     public static void shutdownNow(Executor executor, final int timeout) {
         if (!(executor instanceof ExecutorService) || isTerminated(executor)) {
             return;
         }
+        // 立即关闭，包括原有任务也打断
         final ExecutorService es = (ExecutorService) executor;
         try {
             es.shutdownNow();
@@ -88,6 +100,7 @@ public class ExecutorUtil {
         } catch (NullPointerException ex2) {
             return;
         }
+        // 等待原有任务被打断完成
         try {
             es.awaitTermination(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ex) {
@@ -98,6 +111,10 @@ public class ExecutorUtil {
         }
     }
 
+    /**
+     * 新开线程，不断强制关闭
+     * @param es
+     */
     private static void newThreadToCloseExecutor(final ExecutorService es) {
         if (!isTerminated(es)) {
             shutdownExecutor.execute(new Runnable() {

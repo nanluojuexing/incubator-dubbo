@@ -468,11 +468,15 @@ public abstract class AbstractRegistry implements Registry {
         }
     }
 
+    /**
+     * 销毁每个 Registry
+     */
     @Override
     public void destroy() {
         if (logger.isInfoEnabled()) {
             logger.info("Destroy registry:" + getUrl());
         }
+        // 获取注册
         Set<URL> destroyRegistered = new HashSet<URL>(getRegistered());
         if (!destroyRegistered.isEmpty()) {
             for (URL url : new HashSet<URL>(getRegistered())) {

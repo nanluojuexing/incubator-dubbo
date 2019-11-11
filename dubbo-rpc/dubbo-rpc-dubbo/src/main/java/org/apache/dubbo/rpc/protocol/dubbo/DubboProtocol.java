@@ -524,6 +524,7 @@ public class DubboProtocol extends AbstractProtocol {
 
     @Override
     public void destroy() {
+        // 销毁所有的 ExchangeServer
         for (String key : new ArrayList<String>(serverMap.keySet())) {
             ExchangeServer server = serverMap.remove(key);
             if (server != null) {
@@ -537,7 +538,7 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
         }
-
+        // 销毁所有 ExchangeClient
         for (String key : new ArrayList<String>(referenceClientMap.keySet())) {
             ExchangeClient client = referenceClientMap.remove(key);
             if (client != null) {
@@ -551,7 +552,7 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
         }
-
+        // 销毁所有幽灵 ExchangeClient
         for (String key : new ArrayList<String>(ghostClientMap.keySet())) {
             ExchangeClient client = ghostClientMap.remove(key);
             if (client != null) {
@@ -566,6 +567,7 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
         stubServiceMethodsMap.clear();
+        // 调用父类 , 取消服务的暴露( Exporter )
         super.destroy();
     }
 }

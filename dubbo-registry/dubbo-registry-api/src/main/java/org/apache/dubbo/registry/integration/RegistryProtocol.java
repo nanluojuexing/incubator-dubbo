@@ -454,6 +454,7 @@ public class RegistryProtocol implements Protocol {
     @Override
     public void destroy() {
         List<Exporter<?>> exporters = new ArrayList<Exporter<?>>(bounds.values());
+        // 取消所有 Exporter 的暴露
         for (Exporter<?> exporter : exporters) {
             exporter.unexport();
         }
