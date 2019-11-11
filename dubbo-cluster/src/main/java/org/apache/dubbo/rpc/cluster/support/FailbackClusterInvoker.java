@@ -48,6 +48,9 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(FailbackClusterInvoker.class);
 
+    /**
+     * 重试频率
+     */
     private static final long RETRY_FAILED_PERIOD = 5;
 
     private final int retries;

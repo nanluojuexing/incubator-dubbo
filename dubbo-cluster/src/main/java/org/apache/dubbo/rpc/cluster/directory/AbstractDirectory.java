@@ -35,16 +35,27 @@ import java.util.Map;
 /**
  * Abstract implementation of Directory: Invoker list returned from this Directory's list method have been filtered by Routers
  *
+ * 实现了公用的路由规则逻辑
+ *
  */
 public abstract class AbstractDirectory<T> implements Directory<T> {
 
     // logger
     private static final Logger logger = LoggerFactory.getLogger(AbstractDirectory.class);
 
+    /**
+     * 注册中心url
+     */
     private final URL url;
 
+    /**
+     * 是否已经销毁
+     */
     private volatile boolean destroyed = false;
 
+    /**
+     * 消费者url
+     */
     private volatile URL consumerUrl;
 
     protected RouterChain<T> routerChain;

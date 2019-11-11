@@ -39,11 +39,14 @@ public class SpringContainer implements Container {
 
     @Override
     public void start() {
+        // 获取spring配置文件的地址
         String configPath = ConfigUtils.getProperty(SPRING_CONFIG);
         if (configPath == null || configPath.length() == 0) {
             configPath = DEFAULT_SPRING_CONFIG;
         }
+        // 创建 spring Context 对象
         context = new ClassPathXmlApplicationContext(configPath.split("[,\\s]+"));
+        // 启动 Spring Context ，会触发 ContextStartedEvent 事件
         context.start();
     }
 
@@ -51,8 +54,9 @@ public class SpringContainer implements Container {
     public void stop() {
         try {
             if (context != null) {
+                // 停止 Spring Context ，会触发 ContextStoppedEvent 事件。
                 context.stop();
-                context.close();
+                // 关闭 Spring Context ，会触发 ContextClosedEvent 事件。
                 context = null;
             }
         } catch (Throwable e) {

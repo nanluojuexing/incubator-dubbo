@@ -148,9 +148,11 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     }
 
     public void subscribe(URL url) {
+        // 设置消费订阅的url
         setConsumerUrl(url);
         consumerConfigurationListener.addNotifyListener(this);
         serviceConfigurationListener = new ReferenceConfigurationListener(this, url);
+        // 向注册中心，发起订阅
         registry.subscribe(url, this);
     }
 
@@ -179,6 +181,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     }
 
     /**
+     * 通知监听器，在注册中心发生变化的时候，会通知
      * 根据url的category参数对url进行分别处理,toConfigurators,toRouters 将url转为 configurators 和 routers 列表
      * @param urls The list of registered information , is always not empty. The meaning is the same as the return value of {@link org.apache.dubbo.registry.RegistryService#lookup(URL)}.
      */
@@ -353,8 +356,10 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         Set<String> keys = new HashSet<String>();
         // 获取服务消费端配置的协议
         String queryProtocols = this.queryMap.get(Constants.PROTOCOL_KEY);
+        // 循环服务提供者 URL 集合，转成 Invoker 集合
         for (URL providerUrl : urls) {
             // If protocol is configured at the reference side, only the matching protocol is selected
+            // 如果 reference 端配置了 protocol ，则只选择匹配的 protocol
             if (queryProtocols != null && queryProtocols.length() > 0) {
                 boolean accept = false;
                 String[] acceptProtocols = queryProtocols.split(",");
@@ -384,7 +389,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             }
             // 合并url
             URL url = mergeUrl(providerUrl);
-
+            //忽略已经初始化的
             String key = url.toFullString(); // The parameter urls are sorted
             if (keys.contains(key)) { // Repeated url
                 continue;
@@ -429,17 +434,20 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     /**
      * Merge url parameters. the order is: override > -D >Consumer > Provider
      *
+     * 合并 URL 参数，优先级为配置规则 > 服务消费者配置 > 服务提供者配置
      * @param providerUrl
      * @return
      */
     private URL mergeUrl(URL providerUrl) {
+        // 合并消费端的参数
         providerUrl = ClusterUtils.mergeUrl(providerUrl, queryMap); // Merge the consumer side parameters
 
         providerUrl = overrideWithConfigurator(providerUrl);
-
+        // 不检查是否成功，总是创建 invoker
         providerUrl = providerUrl.addParameter(Constants.CHECK_KEY, String.valueOf(false)); // Do not check whether the connection is successful or not, always create Invoker!
 
         // The combination of directoryUrl and override is at the end of notify, which can't be handled here
+        // 仅合并提供者参数，因为 directoryUrl 与 override 合并是在 notify 的最后，这里不能够处理
         this.overrideDirectoryUrl = this.overrideDirectoryUrl.addParametersIfAbsent(providerUrl.getParameters()); // Merge the provider side parameters
 
         if ((providerUrl.getPath() == null || providerUrl.getPath()
