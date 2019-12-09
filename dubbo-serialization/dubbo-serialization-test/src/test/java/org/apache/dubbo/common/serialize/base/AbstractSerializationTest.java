@@ -327,14 +327,15 @@ public abstract class AbstractSerializationTest {
     @Test
     public void test_UtfString() throws Exception {
         ObjectOutput objectOutput = serialization.serialize(url, byteArrayOutputStream);
-        objectOutput.writeUTF("123中华人民共和国");
+        objectOutput.writeUTF("v1NtbuqEvevYREmKl/xzIOsCJOd+/A3QQ9Rm6Vc6v5t5Q=");
         objectOutput.flushBuffer();
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(
                 byteArrayOutputStream.toByteArray());
         ObjectInput deserialize = serialization.deserialize(url, byteArrayInputStream);
 
-        assertEquals("123中华人民共和国", deserialize.readUTF());
+        String s = deserialize.readUTF();
+        assertEquals("v1NtbuqEvevYREmKl/xzIOsCJOd+/A3QQ9Rm6Vc6v5t5Q=", s);
 
         try {
             deserialize.readUTF();

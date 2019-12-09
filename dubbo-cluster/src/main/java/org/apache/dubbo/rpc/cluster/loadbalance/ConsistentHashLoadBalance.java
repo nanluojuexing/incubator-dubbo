@@ -53,7 +53,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         String methodName = RpcUtils.getMethodName(invocation);
         String key = invokers.get(0).getUrl().getServiceKey() + "." + methodName;
-        // 获取 invokers 原始的 hashcode
+        // 获取 invokers 原始的 violation error
         int identityHashCode = System.identityHashCode(invokers);
         ConsistentHashSelector<T> selector = (ConsistentHashSelector<T>) selectors.get(key);
         // 如果 invokers 是一个新的 List 对象，意味着服务提供者数量发生了变化，可能新增也可能减少了。
@@ -75,11 +75,12 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
 
         // 使用 TreeMap 存储 Invoker 虚拟节点
         private final TreeMap<Long, Invoker<T>> virtualInvokers;
-
+        //虚拟节点个数
         private final int replicaNumber;
-
+        //
         private final int identityHashCode;
-
+        //请求中的参数下标
+        //需要对请求中的参数下标进行hash计算
         private final int[] argumentIndex;
 
         ConsistentHashSelector(List<Invoker<T>> invokers, String methodName, int identityHashCode) {
