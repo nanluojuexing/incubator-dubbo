@@ -41,6 +41,7 @@ import java.lang.annotation.Target;
  * <br/>
  * The reason for this change is:
  * <p>
+ * 可以使用在类 接口和枚举类上，dubbo框架都是在接口上使用
  * If there's third party library referenced by static field or by method in extension implementation, its class will
  * fail to initialize if the third party library doesn't exist. In this case, dubbo cannot figure out extension's id
  * therefore cannot be able to map the exception information with the extension, if the previous format is used.

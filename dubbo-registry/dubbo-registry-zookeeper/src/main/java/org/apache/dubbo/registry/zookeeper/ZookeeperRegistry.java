@@ -172,9 +172,10 @@ public class ZookeeperRegistry extends FailbackRegistry {
                  **/
                 if (zkListener == null) {
                     listeners.putIfAbsent(listener, (parentPath, currentChilds) -> {
+                        //子节点变化，接受到通知
                         for (String child : currentChilds) {
                             child = URL.decode(child);
-                            //
+                            // 如果未订阅，说明是新的节点
                             if (!anyServices.contains(child)) {
                                 anyServices.add(child);
                                 subscribe(url.setPath(child).addParameters(Constants.INTERFACE_KEY, child,

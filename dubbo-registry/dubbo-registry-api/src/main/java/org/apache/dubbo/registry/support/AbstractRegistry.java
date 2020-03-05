@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * AbstractRegistry. (SPI, Prototype, ThreadSafe)
- * Registry 抽象类
+ * Registry 抽象类 实现 注册，订阅，注册，查询 通知等方法
  */
 public abstract class AbstractRegistry implements Registry {
 
